@@ -1,8 +1,15 @@
-from fastapi import Depends, FastAPI, HTTPException, Query, status
+from fastapi import Depends, FastAPI, Query, status
 from sqlalchemy.orm import Session
 
+from .auth import require_api_key
+from .crud import (
+    create_book as crud_create_book,
+    delete_book as crud_delete_book,
+    get_book_or_404,
+    list_books as crud_list_books,
+    update_book as crud_update_book,
+)
 from .database import Base, engine, get_db
-from .models import Book
 from .schemas import BookCreate, BookOut, BookUpdate
 
 app = FastAPI(
@@ -21,55 +28,43 @@ def health_check() -> dict[str, str]:
 
 
 @app.post("/books", response_model=BookOut, status_code=status.HTTP_201_CREATED)
-def create_book(book: BookCreate, db: Session = Depends(get_db)) -> Book:
-    db_book = Book(**book.model_dump())
-    db.add(db_book)
-    db.commit()
-    db.refresh(db_book)
-    return db_book
+def create_book_endpoint(
+    book: BookCreate,
+    db: Session = Depends(get_db),
+    _: None = Depends(require_api_key),
+) -> BookOut:
+    return crud_create_book(db, book)
 
 
 @app.get("/books", response_model=list[BookOut])
-def list_books(
+def list_books_endpoint(
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=20, ge=1, le=100),
     db: Session = Depends(get_db),
-) -> list[Book]:
-    return db.query(Book).offset(skip).limit(limit).all()
+) -> list[BookOut]:
+    return crud_list_books(db, skip, limit)
 
 
 @app.get("/books/{book_id}", response_model=BookOut)
-def get_book(book_id: int, db: Session = Depends(get_db)) -> Book:
-    book = db.query(Book).filter(Book.id == book_id).first()
-    if not book:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
-    return book
+def get_book_endpoint(book_id: int, db: Session = Depends(get_db)) -> BookOut:
+    return get_book_or_404(db, book_id)
 
 
 @app.put("/books/{book_id}", response_model=BookOut)
-def update_book(book_id: int, payload: BookUpdate, db: Session = Depends(get_db)) -> Book:
-    book = db.query(Book).filter(Book.id == book_id).first()
-    if not book:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
-
-    updates = payload.model_dump(exclude_unset=True)
-    if not updates:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No fields provided")
-
-    for field, value in updates.items():
-        setattr(book, field, value)
-
-    db.commit()
-    db.refresh(book)
-    return book
+def update_book_endpoint(
+    book_id: int,
+    payload: BookUpdate,
+    db: Session = Depends(get_db),
+    _: None = Depends(require_api_key),
+) -> BookOut:
+    return crud_update_book(db, book_id, payload)
 
 
 @app.delete("/books/{book_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_book(book_id: int, db: Session = Depends(get_db)) -> None:
-    book = db.query(Book).filter(Book.id == book_id).first()
-    if not book:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
-
-    db.delete(book)
-    db.commit()
+def delete_book_endpoint(
+    book_id: int,
+    db: Session = Depends(get_db),
+    _: None = Depends(require_api_key),
+) -> None:
+    crud_delete_book(db, book_id)
     return None
