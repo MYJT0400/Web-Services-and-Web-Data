@@ -24,6 +24,7 @@ Base.metadata.create_all(bind=engine)
 
 @app.get("/health")
 def health_check() -> dict[str, str]:
+    # Lightweight endpoint to verify service is alive.
     return {"status": "ok"}
 
 
@@ -33,6 +34,7 @@ def create_book_endpoint(
     db: Session = Depends(get_db),
     _: None = Depends(require_api_key),
 ) -> BookOut:
+    # Route handles HTTP concerns; DB logic lives in crud.py.
     return crud_create_book(db, book)
 
 
@@ -42,6 +44,7 @@ def list_books_endpoint(
     limit: int = Query(default=20, ge=1, le=100),
     db: Session = Depends(get_db),
 ) -> list[BookOut]:
+    # Public read endpoint with pagination parameters.
     return crud_list_books(db, skip, limit)
 
 
@@ -57,6 +60,7 @@ def update_book_endpoint(
     db: Session = Depends(get_db),
     _: None = Depends(require_api_key),
 ) -> BookOut:
+    # Protected write endpoint.
     return crud_update_book(db, book_id, payload)
 
 
@@ -66,5 +70,6 @@ def delete_book_endpoint(
     db: Session = Depends(get_db),
     _: None = Depends(require_api_key),
 ) -> None:
+    # Protected write endpoint.
     crud_delete_book(db, book_id)
     return None
