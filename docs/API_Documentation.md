@@ -107,7 +107,12 @@ Common errors:
 
 Query parameters:
 - skip (int, optional, default=0, min=0)
-- limit (int, optional, default=20, min=1, max=100)
+- limit (int, optional, default=20, min=1, max=100000)
+- book_id (int, optional, min=1)
+- title (string, optional, fuzzy match)
+- author (string, optional, fuzzy match)
+- genre (string, optional, fuzzy match)
+- published_year (int, optional, exact match)
 
 Success response (200):
 ```json

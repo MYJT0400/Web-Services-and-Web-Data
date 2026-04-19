@@ -66,4 +66,6 @@ pytest -q tests -p no:cacheprovider
 ## Notes
 - Database file: `books.db` (created automatically on startup).
 - Write endpoints (`POST/PUT/DELETE`) require `X-API-Key`.
+- `GET /books` supports optional filters: `book_id`, `title`, `author`, `genre`, `published_year`.
+- `GET /books` `limit` maximum is `100000`.
 - Full test cases are under `tests/test_api.py`.
