@@ -167,7 +167,7 @@ Embedding details:
 ## Data Import and Startup
 
 - `books.csv` should be placed in the project root.
-- `books.db` is created automatically if it does not exist.
+- `books.db` is stored in the project root and is created automatically if it does not exist.
 - If the database is empty, `books.csv` is imported automatically.
 - Missing embedding columns are added automatically for existing local databases.
 - Missing title embeddings are precomputed and stored on startup.

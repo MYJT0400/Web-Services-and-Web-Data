@@ -7,6 +7,8 @@ Base URL (local): http://127.0.0.1:8000
 
 Book Insights API is a FastAPI web service backed by a SQLite database. It imports the Goodreads `books.csv` dataset, exposes CRUD endpoints for book records, supports multi-field search, and provides a hybrid similar-books recommendation endpoint.
 
+The SQLite database file is fixed to the project root as `books.db`, so local runs and deployment use the same database location instead of relying on the current working directory.
+
 Interactive Swagger documentation is available at:
 
 ```text
