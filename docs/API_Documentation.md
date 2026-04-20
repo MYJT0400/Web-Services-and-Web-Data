@@ -133,6 +133,7 @@ Recommendation scoring uses title embeddings plus reranking:
 - For later recommendation positions, each previously selected book with overlapping authors deducts one quarter of the author score, capped at the full 15% author weight.
 - The same quarter-step rule is also applied to repeated language code and repeated publisher, each capped at its own maximum rerank weight.
 - The API returns the diversity penalty as separate fields for title, authors, language, and publisher, plus the total diversity penalty.
+- Title embeddings are generated locally with `fastembed` using the `BAAI/bge-small-en-v1.5` ONNX model, so PyTorch is not required for recommendation inference.
 
 Penalty field meanings:
 

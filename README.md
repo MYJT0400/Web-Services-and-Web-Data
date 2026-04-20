@@ -41,7 +41,7 @@ Book Insights API is a **FastAPI + SQLite + SQLAlchemy** project for managing an
    http://127.0.0.1:8000/docs
    ```
 
-On first run, if `.models/bge-micro-v2` is missing, the app prints a terminal message and downloads the embedding model automatically. The `.models/` directory is ignored by git so the model does not need to be submitted.
+On first run, if `.models/fastembed-bge-small-en-v1.5` is missing, the app prints a terminal message and downloads the embedding model automatically. The `.models/` directory is ignored by git so the model does not need to be submitted.
 
 ## API Key
 
@@ -157,9 +157,10 @@ The distinction is intentional: `duplicate_penalty` compares a candidate with th
 
 Embedding details:
 
-- Model name: `SmartComponents/bge-micro-v2`
-- Local model path: `.models/bge-micro-v2`
-- Embeddings are computed from book titles.
+- Embedding library: `fastembed`
+- Model name: `BAAI/bge-small-en-v1.5`
+- Local model cache path: `.models/fastembed-bge-small-en-v1.5`
+- Embeddings are computed from book titles using FastEmbed on ONNX Runtime, without PyTorch.
 - Title embeddings are stored in `books.db` on startup for faster recommendations.
 
 ## Data Import and Startup

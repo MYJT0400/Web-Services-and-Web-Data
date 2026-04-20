@@ -6,13 +6,13 @@ import sys
 from functools import lru_cache
 from pathlib import Path
 
-from sentence_transformers import SentenceTransformer
+from fastembed import TextEmbedding
 from sqlalchemy.orm import Session
 
 from .models import Book
 
-MODEL_DIR = Path(__file__).resolve().parents[1] / ".models" / "bge-micro-v2"
-EMBEDDING_MODEL_NAME = "SmartComponents/bge-micro-v2"
+MODEL_CACHE_DIR = Path(__file__).resolve().parents[1] / ".models" / "fastembed-bge-small-en-v1.5"
+EMBEDDING_MODEL_NAME = "BAAI/bge-small-en-v1.5"
 
 # Requested rerank weights.
 MODEL_SIMILARITY_WEIGHT = 0.50
@@ -296,44 +296,42 @@ def _unpack_embedding(blob: bytes) -> list[float]:
 
 
 def _embed_titles(titles: list[str]) -> list[list[float]]:
-    prefixed_titles = [f"Represent this book title for similarity search: {title}" for title in titles]
-    embeddings = _get_embedding_model().encode(
-        prefixed_titles,
-        normalize_embeddings=True,
-        convert_to_numpy=True,
-    )
+    prefixed_titles = [f"passage: {title}" for title in titles]
+    embeddings = list(_get_embedding_model().embed(prefixed_titles))
     return [embedding.astype("float32").tolist() for embedding in embeddings]
 
 
 @lru_cache(maxsize=1)
-def _get_embedding_model() -> SentenceTransformer:
-    _ensure_local_model()
-    return SentenceTransformer(str(MODEL_DIR), local_files_only=True)
+def _get_embedding_model() -> TextEmbedding:
+    return _ensure_local_model()
 
 
-def _ensure_local_model() -> None:
-    required_files = {"config.json", "modules.json", "tokenizer.json"}
-    has_required_files = MODEL_DIR.exists() and required_files.issubset(
-        {path.name for path in MODEL_DIR.iterdir() if path.is_file()}
-    )
-    if has_required_files:
-        return
+def _ensure_local_model() -> TextEmbedding:
+    has_local_files = MODEL_CACHE_DIR.exists() and any(MODEL_CACHE_DIR.rglob("*"))
+    MODEL_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
-    MODEL_DIR.parent.mkdir(parents=True, exist_ok=True)
-    print(
-        f"[Book Insights API] Embedding model not found at {MODEL_DIR}.",
-        file=sys.stderr,
-        flush=True,
+    if not has_local_files:
+        print(
+            f"[Book Insights API] Embedding model not found in {MODEL_CACHE_DIR}.",
+            file=sys.stderr,
+            flush=True,
+        )
+        print(
+            f"[Book Insights API] Downloading required model with FastEmbed: {EMBEDDING_MODEL_NAME}",
+            file=sys.stderr,
+            flush=True,
+        )
+
+    model = TextEmbedding(
+        model_name=EMBEDDING_MODEL_NAME,
+        cache_dir=str(MODEL_CACHE_DIR),
     )
-    print(
-        f"[Book Insights API] Downloading required model: {EMBEDDING_MODEL_NAME}",
-        file=sys.stderr,
-        flush=True,
-    )
-    model = SentenceTransformer(EMBEDDING_MODEL_NAME)
-    model.save(str(MODEL_DIR))
-    print(
-        f"[Book Insights API] Model downloaded and saved to {MODEL_DIR}.",
-        file=sys.stderr,
-        flush=True,
-    )
+
+    if not has_local_files:
+        print(
+            f"[Book Insights API] Model downloaded and cached in {MODEL_CACHE_DIR}.",
+            file=sys.stderr,
+            flush=True,
+        )
+
+    return model

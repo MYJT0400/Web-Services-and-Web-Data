@@ -233,7 +233,7 @@ endobj
 << /Type /Page /Parent 24 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
 endobj
 6 0 obj
-<< /Length 2635 >>
+<< /Length 2774 >>
 stream
 BT
 /F1 10 Tf
@@ -338,9 +338,9 @@ BT
 0 -14 Td
 (  publisher, plus the total diversity penalty.) Tj
 0 -14 Td
-() Tj
+(- Title embeddings are generated locally with `fastembed` using the `BAAI/bge-small-en-v1.5`) Tj
 0 -14 Td
-(Penalty field meanings:) Tj
+(  ONNX model, so PyTorch is not required for recommendation inference.) Tj
 ET
 endstream
 endobj
@@ -348,11 +348,15 @@ endobj
 << /Type /Page /Parent 24 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 6 0 R >>
 endobj
 8 0 obj
-<< /Length 2354 >>
+<< /Length 2362 >>
 stream
 BT
 /F1 10 Tf
 50 770 Td
+() Tj
+0 -14 Td
+(Penalty field meanings:) Tj
+0 -14 Td
 () Tj
 0 -14 Td
 (- `duplicate_penalty`: compares the candidate book with the selected target book. It is used) Tj
@@ -452,10 +456,6 @@ BT
 () Tj
 0 -14 Td
 () Tj
-0 -14 Td
-(4.3 Create Book) Tj
-0 -14 Td
-() Tj
 ET
 endstream
 endobj
@@ -463,11 +463,15 @@ endobj
 << /Type /Page /Parent 24 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 8 0 R >>
 endobj
 10 0 obj
-<< /Length 1712 >>
+<< /Length 1702 >>
 stream
 BT
 /F1 10 Tf
 50 770 Td
+(4.3 Create Book) Tj
+0 -14 Td
+() Tj
+0 -14 Td
 (- Method: `POST`) Tj
 0 -14 Td
 (- Path: `/books`) Tj
@@ -567,10 +571,6 @@ BT
 () Tj
 0 -14 Td
 () Tj
-0 -14 Td
-(4.4 List and Search Books) Tj
-0 -14 Td
-() Tj
 ET
 endstream
 endobj
@@ -578,11 +578,15 @@ endobj
 << /Type /Page /Parent 24 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 10 0 R >>
 endobj
 12 0 obj
-<< /Length 1972 >>
+<< /Length 1982 >>
 stream
 BT
 /F1 10 Tf
 50 770 Td
+(4.4 List and Search Books) Tj
+0 -14 Td
+() Tj
+0 -14 Td
 (- Method: `GET`) Tj
 0 -14 Td
 (- Path: `/books`) Tj
@@ -682,10 +686,6 @@ BT
 () Tj
 0 -14 Td
 (4.5 Get Book by Database ID) Tj
-0 -14 Td
-() Tj
-0 -14 Td
-(- Method: `GET`) Tj
 ET
 endstream
 endobj
@@ -693,11 +693,15 @@ endobj
 << /Type /Page /Parent 24 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 12 0 R >>
 endobj
 14 0 obj
-<< /Length 1664 >>
+<< /Length 1663 >>
 stream
 BT
 /F1 10 Tf
 50 770 Td
+() Tj
+0 -14 Td
+(- Method: `GET`) Tj
+0 -14 Td
 (- Path: `/books/{book_id}`) Tj
 0 -14 Td
 (- Auth required: No) Tj
@@ -797,10 +801,6 @@ BT
 (- `limit`: integer, optional, default `5`, minimum `1`, maximum `20`.) Tj
 0 -14 Td
 () Tj
-0 -14 Td
-(Example request:) Tj
-0 -14 Td
-() Tj
 ET
 endstream
 endobj
@@ -808,11 +808,15 @@ endobj
 << /Type /Page /Parent 24 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 14 0 R >>
 endobj
 16 0 obj
-<< /Length 2000 >>
+<< /Length 2001 >>
 stream
 BT
 /F1 10 Tf
 50 770 Td
+(Example request:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
 () Tj
 0 -14 Td
 (GET /books/1/recommendations?limit=3) Tj
@@ -912,10 +916,6 @@ BT
 () Tj
 0 -14 Td
 (4.7 Update Book) Tj
-0 -14 Td
-() Tj
-0 -14 Td
-(- Method: `PUT`) Tj
 ET
 endstream
 endobj
@@ -923,11 +923,15 @@ endobj
 << /Type /Page /Parent 24 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 16 0 R >>
 endobj
 18 0 obj
-<< /Length 1650 >>
+<< /Length 1606 >>
 stream
 BT
 /F1 10 Tf
 50 770 Td
+() Tj
+0 -14 Td
+(- Method: `PUT`) Tj
+0 -14 Td
 (- Path: `/books/{book_id}`) Tj
 0 -14 Td
 (- Auth required: Yes, `X-API-Key`) Tj
@@ -1027,10 +1031,6 @@ BT
 () Tj
 0 -14 Td
 (- Method: `DELETE`) Tj
-0 -14 Td
-(- Path: `/books/{book_id}`) Tj
-0 -14 Td
-(- Auth required: Yes, `X-API-Key`) Tj
 ET
 endstream
 endobj
@@ -1038,11 +1038,15 @@ endobj
 << /Type /Page /Parent 24 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 18 0 R >>
 endobj
 20 0 obj
-<< /Length 1227 >>
+<< /Length 1286 >>
 stream
 BT
 /F1 10 Tf
 50 770 Td
+(- Path: `/books/{book_id}`) Tj
+0 -14 Td
+(- Auth required: Yes, `X-API-Key`) Tj
+0 -14 Td
 () Tj
 0 -14 Td
 (Path parameters:) Tj
@@ -1142,10 +1146,6 @@ BT
 () Tj
 0 -14 Td
 (6. cURL Examples) Tj
-0 -14 Td
-() Tj
-0 -14 Td
-() Tj
 ET
 endstream
 endobj
@@ -1153,11 +1153,15 @@ endobj
 << /Type /Page /Parent 24 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 20 0 R >>
 endobj
 22 0 obj
-<< /Length 1181 >>
+<< /Length 1211 >>
 stream
 BT
 /F1 10 Tf
 50 770 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
 (Create:) Tj
 0 -14 Td
 () Tj
@@ -1238,27 +1242,27 @@ xref
 0000001954 00000 n 
 0000004127 00000 n 
 0000004254 00000 n 
-0000006941 00000 n 
-0000007068 00000 n 
-0000009474 00000 n 
-0000009601 00000 n 
-0000011366 00000 n 
-0000011495 00000 n 
-0000013520 00000 n 
-0000013649 00000 n 
-0000015366 00000 n 
-0000015495 00000 n 
-0000017548 00000 n 
-0000017677 00000 n 
-0000019380 00000 n 
-0000019509 00000 n 
-0000020789 00000 n 
-0000020918 00000 n 
-0000022152 00000 n 
-0000022281 00000 n 
-0000022407 00000 n 
+0000007080 00000 n 
+0000007207 00000 n 
+0000009621 00000 n 
+0000009748 00000 n 
+0000011503 00000 n 
+0000011632 00000 n 
+0000013667 00000 n 
+0000013796 00000 n 
+0000015512 00000 n 
+0000015641 00000 n 
+0000017695 00000 n 
+0000017824 00000 n 
+0000019483 00000 n 
+0000019612 00000 n 
+0000020951 00000 n 
+0000021080 00000 n 
+0000022344 00000 n 
+0000022473 00000 n 
+0000022599 00000 n 
 trailer
 << /Size 26 /Root 25 0 R >>
 startxref
-22458
+22650
 %%EOF
