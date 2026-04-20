@@ -474,7 +474,45 @@ Run tests:
 pytest -q tests -p no:cacheprovider
 ```
 
-## 6. cURL Examples
+## 6. PythonAnywhere WSGI Deployment
+
+This project can be deployed on PythonAnywhere using a traditional WSGI web app, even though the core framework is FastAPI. The repository includes [wsgi.py](/d:/desktop/web/cwk1/wsgi.py), which adapts the FastAPI app to a WSGI callable by using `a2wsgi`.
+
+Important deployment note:
+
+- `app.main` automatically initializes the database for local development.
+- `wsgi.py` sets `AUTO_INITIALIZE_DATABASE=0` so the website worker does not import CSV data or warm embeddings during each reload.
+- Before reloading the site, initialize the database once from a Bash console:
+
+```bash
+cd ~/Web-Services-and-Web-Data
+python -c "from app.seed import initialize_database; initialize_database(); print('ready')"
+```
+
+Install dependencies on PythonAnywhere:
+
+```bash
+python -m pip install --user -r requirements.txt
+```
+
+Minimal WSGI config contents:
+
+```python
+import sys
+path = "/home/MX0000/Web-Services-and-Web-Data"
+if path not in sys.path:
+    sys.path.append(path)
+
+from wsgi import application
+```
+
+After reloading the web app, verify:
+
+- `GET /health`
+- `GET /`
+- `GET /docs`
+
+## 7. cURL Examples
 
 Create:
 

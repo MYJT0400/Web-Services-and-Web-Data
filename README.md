@@ -43,6 +43,8 @@ Book Insights API is a **FastAPI + SQLite + SQLAlchemy** project for managing an
 
 On first run, if `.models/fastembed-bge-small-en-v1.5` is missing, the app prints a terminal message and downloads the embedding model automatically. The `.models/` directory is ignored by git so the model does not need to be submitted.
 
+For PythonAnywhere deployment, use the traditional WSGI entrypoint in [wsgi.py](/d:/desktop/web/cwk1/wsgi.py). That entrypoint disables automatic startup initialization so the website worker does not try to import CSV data or warm embeddings during every reload.
+
 ## API Key
 
 Protected endpoints require this header:
@@ -171,6 +173,54 @@ Embedding details:
 - If the database is empty, `books.csv` is imported automatically.
 - Missing embedding columns are added automatically for existing local databases.
 - Missing title embeddings are precomputed and stored on startup.
+- For traditional WSGI deployment, run `initialize_database()` once from a console before reloading the site:
+
+  ```bash
+  python -c "from app.seed import initialize_database; initialize_database(); print('ready')"
+  ```
+
+  The WSGI entrypoint then serves the existing database without repeating heavy initialization during worker import.
+
+## PythonAnywhere WSGI Deployment
+
+Install dependencies in your PythonAnywhere Bash console:
+
+```bash
+python -m pip install --user -r requirements.txt
+```
+
+Initialize the database once:
+
+```bash
+cd ~/Web-Services-and-Web-Data
+python -c "from app.seed import initialize_database; initialize_database(); print('ready')"
+```
+
+Create or edit the WSGI file in PythonAnywhere so it points at your project `wsgi.py`:
+
+```python
+import sys
+path = "/home/MX0000/Web-Services-and-Web-Data"
+if path not in sys.path:
+    sys.path.append(path)
+
+from wsgi import application
+```
+
+In the PythonAnywhere Web tab:
+
+- Choose a manual configuration with the same Python version that your installed packages use.
+- Set the source code path to `/home/MX0000/Web-Services-and-Web-Data`.
+- Set the WSGI configuration file to import `application` from the project `wsgi.py`.
+- Reload the web app after saving changes.
+
+After reloading, test:
+
+```text
+https://MX0000.pythonanywhere.com/health
+https://MX0000.pythonanywhere.com/
+https://MX0000.pythonanywhere.com/docs
+```
 
 ## API Documentation
 

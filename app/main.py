@@ -1,3 +1,5 @@
+import os
+
 from fastapi import Depends, FastAPI, Query, status
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
@@ -23,8 +25,10 @@ app = FastAPI(
     version="0.1.0",
 )
 
-# Create the table and import books.csv for local runs.
-initialize_database()
+if os.getenv("AUTO_INITIALIZE_DATABASE", "1").lower() not in {"0", "false", "no"}:
+    # Local runs can bootstrap the SQLite database automatically. Production WSGI
+    # deployments can disable this and run app.seed.initialize_database manually.
+    initialize_database()
 
 
 @app.get("/", response_class=HTMLResponse)
