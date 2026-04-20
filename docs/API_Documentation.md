@@ -134,6 +134,7 @@ Recommendation scoring uses title embeddings plus reranking:
 - The same quarter-step rule is also applied to repeated language code and repeated publisher, each capped at its own maximum rerank weight.
 - The API returns the diversity penalty as separate fields for title, authors, language, and publisher, plus the total diversity penalty.
 - Title embeddings are generated locally with `fastembed` using the `BAAI/bge-small-en-v1.5` ONNX model, so PyTorch is not required for recommendation inference.
+- If the FastEmbed snapshot exists under `.models/fastembed-bge-small-en-v1.5`, the app loads that local snapshot directly and does not need to contact Hugging Face at startup.
 
 Penalty field meanings:
 

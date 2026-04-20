@@ -307,6 +307,19 @@ def _get_embedding_model() -> TextEmbedding:
 
 
 def _ensure_local_model() -> TextEmbedding:
+    local_snapshot = _find_local_fastembed_snapshot()
+    if local_snapshot is not None:
+        print(
+            f"[Book Insights API] Loading local FastEmbed model from {local_snapshot}.",
+            file=sys.stderr,
+            flush=True,
+        )
+        return TextEmbedding(
+            model_name=EMBEDDING_MODEL_NAME,
+            cache_dir=str(MODEL_CACHE_DIR),
+            specific_model_path=str(local_snapshot),
+        )
+
     has_local_files = MODEL_CACHE_DIR.exists() and any(MODEL_CACHE_DIR.rglob("*"))
     MODEL_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -335,3 +348,27 @@ def _ensure_local_model() -> TextEmbedding:
         )
 
     return model
+
+
+def _find_local_fastembed_snapshot() -> Path | None:
+    snapshot_root = (
+        MODEL_CACHE_DIR / "models--qdrant--bge-small-en-v1.5-onnx-q" / "snapshots"
+    )
+    if not snapshot_root.exists():
+        return None
+
+    required_files = {
+        "config.json",
+        "model_optimized.onnx",
+        "tokenizer.json",
+        "tokenizer_config.json",
+    }
+    for snapshot_dir in snapshot_root.iterdir():
+        if not snapshot_dir.is_dir():
+            continue
+
+        existing_files = {path.name for path in snapshot_dir.iterdir() if path.is_file()}
+        if required_files.issubset(existing_files):
+            return snapshot_dir
+
+    return None

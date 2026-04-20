@@ -348,11 +348,15 @@ endobj
 << /Type /Page /Parent 24 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 6 0 R >>
 endobj
 8 0 obj
-<< /Length 2362 >>
+<< /Length 2539 >>
 stream
 BT
 /F1 10 Tf
 50 770 Td
+(- If the FastEmbed snapshot exists under `.models/fastembed-bge-small-en-v1.5`, the app loads) Tj
+0 -14 Td
+(  that local snapshot directly and does not need to contact Hugging Face at startup.) Tj
+0 -14 Td
 () Tj
 0 -14 Td
 (Penalty field meanings:) Tj
@@ -452,10 +456,6 @@ BT
 (}) Tj
 0 -14 Td
 () Tj
-0 -14 Td
-() Tj
-0 -14 Td
-() Tj
 ET
 endstream
 endobj
@@ -468,6 +468,10 @@ stream
 BT
 /F1 10 Tf
 50 770 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
 (4.3 Create Book) Tj
 0 -14 Td
 () Tj
@@ -567,10 +571,6 @@ BT
 (- `409`: `bookID already exists`.) Tj
 0 -14 Td
 (- `422`: validation error, for example `average_rating` greater than 5.) Tj
-0 -14 Td
-() Tj
-0 -14 Td
-() Tj
 ET
 endstream
 endobj
@@ -578,11 +578,15 @@ endobj
 << /Type /Page /Parent 24 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 10 0 R >>
 endobj
 12 0 obj
-<< /Length 1982 >>
+<< /Length 1955 >>
 stream
 BT
 /F1 10 Tf
 50 770 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
 (4.4 List and Search Books) Tj
 0 -14 Td
 () Tj
@@ -682,10 +686,6 @@ BT
 (- `422`: invalid query parameter, for example `limit=0`.) Tj
 0 -14 Td
 () Tj
-0 -14 Td
-() Tj
-0 -14 Td
-(4.5 Get Book by Database ID) Tj
 ET
 endstream
 endobj
@@ -693,11 +693,15 @@ endobj
 << /Type /Page /Parent 24 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 12 0 R >>
 endobj
 14 0 obj
-<< /Length 1663 >>
+<< /Length 1621 >>
 stream
 BT
 /F1 10 Tf
 50 770 Td
+() Tj
+0 -14 Td
+(4.5 Get Book by Database ID) Tj
+0 -14 Td
 () Tj
 0 -14 Td
 (- Method: `GET`) Tj
@@ -797,10 +801,6 @@ BT
 (Query parameters:) Tj
 0 -14 Td
 () Tj
-0 -14 Td
-(- `limit`: integer, optional, default `5`, minimum `1`, maximum `20`.) Tj
-0 -14 Td
-() Tj
 ET
 endstream
 endobj
@@ -808,11 +808,15 @@ endobj
 << /Type /Page /Parent 24 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 14 0 R >>
 endobj
 16 0 obj
-<< /Length 2001 >>
+<< /Length 2055 >>
 stream
 BT
 /F1 10 Tf
 50 770 Td
+(- `limit`: integer, optional, default `5`, minimum `1`, maximum `20`.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
 (Example request:) Tj
 0 -14 Td
 () Tj
@@ -912,10 +916,6 @@ BT
 (- `422`: invalid `limit`.) Tj
 0 -14 Td
 () Tj
-0 -14 Td
-() Tj
-0 -14 Td
-(4.7 Update Book) Tj
 ET
 endstream
 endobj
@@ -923,11 +923,15 @@ endobj
 << /Type /Page /Parent 24 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 16 0 R >>
 endobj
 18 0 obj
-<< /Length 1606 >>
+<< /Length 1603 >>
 stream
 BT
 /F1 10 Tf
 50 770 Td
+() Tj
+0 -14 Td
+(4.7 Update Book) Tj
+0 -14 Td
 () Tj
 0 -14 Td
 (- Method: `PUT`) Tj
@@ -1027,10 +1031,6 @@ BT
 () Tj
 0 -14 Td
 (4.8 Delete Book) Tj
-0 -14 Td
-() Tj
-0 -14 Td
-(- Method: `DELETE`) Tj
 ET
 endstream
 endobj
@@ -1038,11 +1038,15 @@ endobj
 << /Type /Page /Parent 24 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 18 0 R >>
 endobj
 20 0 obj
-<< /Length 1286 >>
+<< /Length 1288 >>
 stream
 BT
 /F1 10 Tf
 50 770 Td
+() Tj
+0 -14 Td
+(- Method: `DELETE`) Tj
+0 -14 Td
 (- Path: `/books/{book_id}`) Tj
 0 -14 Td
 (- Auth required: Yes, `X-API-Key`) Tj
@@ -1142,10 +1146,6 @@ BT
 () Tj
 0 -14 Td
 () Tj
-0 -14 Td
-() Tj
-0 -14 Td
-(6. cURL Examples) Tj
 ET
 endstream
 endobj
@@ -1153,11 +1153,15 @@ endobj
 << /Type /Page /Parent 24 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 20 0 R >>
 endobj
 22 0 obj
-<< /Length 1211 >>
+<< /Length 1257 >>
 stream
 BT
 /F1 10 Tf
 50 770 Td
+() Tj
+0 -14 Td
+(6. cURL Examples) Tj
+0 -14 Td
 () Tj
 0 -14 Td
 () Tj
@@ -1244,25 +1248,25 @@ xref
 0000004254 00000 n 
 0000007080 00000 n 
 0000007207 00000 n 
-0000009621 00000 n 
-0000009748 00000 n 
-0000011503 00000 n 
-0000011632 00000 n 
-0000013667 00000 n 
-0000013796 00000 n 
-0000015512 00000 n 
-0000015641 00000 n 
-0000017695 00000 n 
-0000017824 00000 n 
-0000019483 00000 n 
-0000019612 00000 n 
-0000020951 00000 n 
-0000021080 00000 n 
-0000022344 00000 n 
-0000022473 00000 n 
-0000022599 00000 n 
+0000009798 00000 n 
+0000009925 00000 n 
+0000011680 00000 n 
+0000011809 00000 n 
+0000013817 00000 n 
+0000013946 00000 n 
+0000015620 00000 n 
+0000015749 00000 n 
+0000017857 00000 n 
+0000017986 00000 n 
+0000019642 00000 n 
+0000019771 00000 n 
+0000021112 00000 n 
+0000021241 00000 n 
+0000022551 00000 n 
+0000022680 00000 n 
+0000022806 00000 n 
 trailer
 << /Size 26 /Root 25 0 R >>
 startxref
-22650
+22857
 %%EOF
