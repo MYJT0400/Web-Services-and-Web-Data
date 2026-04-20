@@ -110,7 +110,11 @@ Recommendation responses include all book fields plus a final score, score break
     "average_rating_score": 0.0898,
     "ratings_count_score": 0.0976,
     "duplicate_penalty": 0.0,
-    "diversity_penalty": 0.03
+    "title_diversity_penalty": 0.0,
+    "authors_diversity_penalty": 0.0375,
+    "language_diversity_penalty": 0.025,
+    "publisher_diversity_penalty": 0.0125,
+    "diversity_penalty": 0.075
   },
   "reason": "This book stayed near the top after reranking: semantic similarity contributed 0.423, and the final score after penalties is 0.625."
 }
@@ -125,6 +129,19 @@ Recommendation scoring uses title embeddings plus reranking:
 - Average rating: 10%
 - Ratings count: 10%
 - Duplicate title and repeated metadata penalties are applied to improve variety.
+- A duplicate title compared with the target book still receives a strong fixed penalty.
+- For later recommendation positions, each previously selected book with overlapping authors deducts one quarter of the author score, capped at the full 15% author weight.
+- The same quarter-step rule is also applied to repeated language code and repeated publisher, each capped at its own maximum rerank weight.
+- The API returns the diversity penalty as separate fields for title, authors, language, and publisher, plus the total diversity penalty.
+
+Penalty field meanings:
+
+- `duplicate_penalty`: compares the candidate book with the selected target book. It is used to reduce the score of different editions or records with the same normalized title as the selected book.
+- `title_diversity_penalty`: compares the candidate book with books already selected earlier in the recommendation list. It is used to reduce repeated titles inside the returned list.
+- `authors_diversity_penalty`: list-level author-repeat penalty. Each earlier selected book with overlapping authors deducts one quarter of the author rerank weight, capped at the full author weight.
+- `language_diversity_penalty`: list-level language-repeat penalty. Each earlier selected book with the same language code deducts one quarter of the language rerank weight, capped at the full language weight.
+- `publisher_diversity_penalty`: list-level publisher-repeat penalty. Each earlier selected book with the same publisher deducts one quarter of the publisher rerank weight, capped at the full publisher weight.
+- `diversity_penalty`: total list-level diversity penalty, calculated as `title_diversity_penalty + authors_diversity_penalty + language_diversity_penalty + publisher_diversity_penalty`.
 
 ## 4. Endpoints
 
@@ -212,7 +229,7 @@ Query parameters:
 
 - `skip`: integer, optional, default `0`, minimum `0`.
 - `limit`: integer, optional, default `20`, minimum `1`, maximum `100000`.
-- `book_id`: integer, optional, minimum `1`. Matches either internal `id` or Goodreads `bookID`.
+- `book_id`: integer, optional, minimum `1`. Matches the Goodreads `bookID` field only.
 - `title`: string, optional, partial match.
 - `authors`: string, optional, partial match.
 - `isbn`: string, optional, partial match.
@@ -337,7 +354,11 @@ Success response `200`:
       "average_rating_score": 0.0898,
       "ratings_count_score": 0.0976,
       "duplicate_penalty": 0.0,
-      "diversity_penalty": 0.03
+      "title_diversity_penalty": 0.0,
+      "authors_diversity_penalty": 0.0375,
+      "language_diversity_penalty": 0.025,
+      "publisher_diversity_penalty": 0.0125,
+      "diversity_penalty": 0.075
     },
     "reason": "Recommended because its title is semantically close to the selected book and the metadata supports the rerank score."
   }

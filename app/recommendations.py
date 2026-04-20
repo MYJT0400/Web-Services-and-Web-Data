@@ -24,9 +24,9 @@ RATINGS_COUNT_WEIGHT = 0.10
 
 # Diversity penalties applied during final selection.
 SAME_TITLE_PENALTY = 0.45
-SAME_AUTHORS_PENALTY = 0.18
-SAME_PUBLISHER_PENALTY = 0.08
-SAME_LANGUAGE_PENALTY = 0.03
+AUTHORS_REPEAT_PENALTY_STEP = AUTHORS_MATCH_WEIGHT / 4
+LANGUAGE_REPEAT_PENALTY_STEP = LANGUAGE_MATCH_WEIGHT / 4
+PUBLISHER_REPEAT_PENALTY_STEP = PUBLISHER_MATCH_WEIGHT / 4
 
 TOKEN_PATTERN = re.compile(r"[a-z0-9]+")
 SERIES_NUMBER_PATTERN = re.compile(r"#\d+")
@@ -137,9 +137,11 @@ def _select_diverse_recommendations(
         for item in remaining:
             candidate = item["book"]
             duplicate_penalty = _duplicate_penalty(target, candidate)
-            diversity_penalty = sum(
-                _pair_penalty(candidate, existing["book"]) for existing in selected
+            diversity_penalties = _diversity_penalties(
+                candidate,
+                [existing["book"] for existing in selected],
             )
+            diversity_penalty = sum(diversity_penalties.values())
             final_score = item["base_score"] - duplicate_penalty - diversity_penalty
 
             if final_score > best_score:
@@ -148,6 +150,9 @@ def _select_diverse_recommendations(
                     **item,
                     "recommendation_score": round(final_score, 6),
                     "duplicate_penalty": round(duplicate_penalty, 6),
+                    "diversity_penalties": {
+                        key: round(value, 6) for key, value in diversity_penalties.items()
+                    },
                     "diversity_penalty": round(diversity_penalty, 6),
                 }
 
@@ -194,17 +199,47 @@ def _duplicate_penalty(target: Book, candidate: Book) -> float:
     return penalty
 
 
-def _pair_penalty(candidate: Book, selected_book: Book) -> float:
-    penalty = 0.0
-    if _normalized_title(candidate.title) == _normalized_title(selected_book.title):
-        penalty += SAME_TITLE_PENALTY
-    if _normalized_authors(candidate.authors) == _normalized_authors(selected_book.authors):
-        penalty += SAME_AUTHORS_PENALTY
-    if _normalize_text(candidate.publisher) == _normalize_text(selected_book.publisher):
-        penalty += SAME_PUBLISHER_PENALTY
-    if candidate.language_code == selected_book.language_code:
-        penalty += SAME_LANGUAGE_PENALTY
-    return penalty
+def _diversity_penalties(candidate: Book, selected_books: list[Book]) -> dict[str, float]:
+    if not selected_books:
+        return {
+            "title_diversity_penalty": 0.0,
+            "authors_diversity_penalty": 0.0,
+            "language_diversity_penalty": 0.0,
+            "publisher_diversity_penalty": 0.0,
+        }
+
+    same_title_count = sum(
+        1
+        for selected_book in selected_books
+        if _normalized_title(candidate.title) == _normalized_title(selected_book.title)
+    )
+    author_repeat_count = sum(
+        1 for selected_book in selected_books if _authors_share_any(candidate.authors, selected_book.authors)
+    )
+    publisher_repeat_count = sum(
+        1
+        for selected_book in selected_books
+        if _normalize_text(candidate.publisher) == _normalize_text(selected_book.publisher)
+    )
+    language_repeat_count = sum(
+        1 for selected_book in selected_books if candidate.language_code == selected_book.language_code
+    )
+
+    return {
+        "title_diversity_penalty": SAME_TITLE_PENALTY if same_title_count > 0 else 0.0,
+        "authors_diversity_penalty": min(
+            author_repeat_count * AUTHORS_REPEAT_PENALTY_STEP,
+            AUTHORS_MATCH_WEIGHT,
+        ),
+        "language_diversity_penalty": min(
+            language_repeat_count * LANGUAGE_REPEAT_PENALTY_STEP,
+            LANGUAGE_MATCH_WEIGHT,
+        ),
+        "publisher_diversity_penalty": min(
+            publisher_repeat_count * PUBLISHER_REPEAT_PENALTY_STEP,
+            PUBLISHER_MATCH_WEIGHT,
+        ),
+    }
 
 
 def _authors_overlap_score(target_authors: str, candidate_authors: str) -> float:
@@ -219,6 +254,10 @@ def _authors_overlap_score(target_authors: str, candidate_authors: str) -> float
 
 def _split_authors(value: str) -> set[str]:
     return {_normalize_text(part) for part in value.split("/") if part.strip()}
+
+
+def _authors_share_any(left_authors: str, right_authors: str) -> bool:
+    return bool(_split_authors(left_authors) & _split_authors(right_authors))
 
 
 def _normalized_authors(value: str) -> str:

@@ -49,6 +49,10 @@ class RecommendationBreakdown(BaseModel):
     average_rating_score: float
     ratings_count_score: float
     duplicate_penalty: float
+    title_diversity_penalty: float
+    authors_diversity_penalty: float
+    language_diversity_penalty: float
+    publisher_diversity_penalty: float
     diversity_penalty: float
 
     model_config = ConfigDict(protected_namespaces=())

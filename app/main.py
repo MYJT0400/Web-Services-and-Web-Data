@@ -99,6 +99,7 @@ def get_book_recommendations_endpoint(
             score_breakdown={
                 **item["score_breakdown"],
                 "duplicate_penalty": item["duplicate_penalty"],
+                **item["diversity_penalties"],
                 "diversity_penalty": item["diversity_penalty"],
             },
             reason=build_recommendation_reason(target_book, item),

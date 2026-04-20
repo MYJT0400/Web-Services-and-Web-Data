@@ -144,6 +144,17 @@ The recommendation algorithm uses:
 
 It also applies penalties for duplicate titles and repeated metadata, so different editions of the same title or repeated author/publisher clusters do not dominate every result.
 
+Penalty fields in `score_breakdown`:
+
+- `duplicate_penalty`: penalty when the candidate has the same normalized title as the selected target book.
+- `title_diversity_penalty`: penalty when the candidate repeats a normalized title that has already appeared earlier in the recommendation list.
+- `authors_diversity_penalty`: progressive penalty for repeating authors that already appeared earlier in the recommendation list. Each repeated author occurrence deducts one quarter of the author score, capped at the full author weight.
+- `language_diversity_penalty`: progressive penalty for repeating the same language code. Each repeated language occurrence deducts one quarter of the language score, capped at the full language weight.
+- `publisher_diversity_penalty`: progressive penalty for repeating the same publisher. Each repeated publisher occurrence deducts one quarter of the publisher score, capped at the full publisher weight.
+- `diversity_penalty`: total list-level diversity penalty, equal to the title, authors, language, and publisher diversity penalties added together.
+
+The distinction is intentional: `duplicate_penalty` compares a candidate with the selected book, while diversity penalties compare a candidate with books that have already been selected for the current recommendation list.
+
 Embedding details:
 
 - Model name: `SmartComponents/bge-micro-v2`

@@ -45,7 +45,7 @@ def search_books(
     query = db.query(Book)
 
     if book_id is not None:
-        query = query.filter((Book.id == book_id) | (Book.bookID == book_id))
+        query = query.filter(Book.bookID == book_id)
     if title:
         query = query.filter(Book.title.ilike(f"%{title}%"))
     if authors:

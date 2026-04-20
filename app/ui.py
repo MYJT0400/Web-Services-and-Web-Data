@@ -653,7 +653,11 @@ def render_home_page() -> str:
             </p>
             <p>
               Duplicate penalty ${escapeHtml(book.score_breakdown.duplicate_penalty)} |
-              Diversity penalty ${escapeHtml(book.score_breakdown.diversity_penalty)}
+              Title diversity ${escapeHtml(book.score_breakdown.title_diversity_penalty)} |
+              Author diversity ${escapeHtml(book.score_breakdown.authors_diversity_penalty)} |
+              Language diversity ${escapeHtml(book.score_breakdown.language_diversity_penalty)} |
+              Publisher diversity ${escapeHtml(book.score_breakdown.publisher_diversity_penalty)} |
+              Total diversity ${escapeHtml(book.score_breakdown.diversity_penalty)}
             </p>
           </details>
         </div>
