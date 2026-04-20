@@ -2,31 +2,59 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class BookBase(BaseModel):
-    # Shared validation rules for request/response data.
-    title: str = Field(min_length=1, max_length=200)
-    author: str = Field(min_length=1, max_length=120)
-    genre: str = Field(min_length=1, max_length=80)
-    published_year: int = Field(ge=0, le=2100)
-    summary: str = Field(default="", max_length=2000)
+    title: str = Field(min_length=1, max_length=255)
+    authors: str = Field(min_length=1, max_length=255)
+    average_rating: float = Field(ge=0, le=5)
+    isbn: str = Field(min_length=1, max_length=20)
+    isbn13: str = Field(min_length=1, max_length=20)
+    language_code: str = Field(min_length=1, max_length=20)
+    num_pages: int = Field(ge=0)
+    ratings_count: int = Field(ge=0)
+    text_reviews_count: int = Field(ge=0)
+    publication_date: str = Field(min_length=1, max_length=20)
+    publisher: str = Field(min_length=1, max_length=255)
 
 
 class BookCreate(BookBase):
-    # Create payload uses all required fields from BookBase.
-    pass
+    bookID: int | None = Field(default=None, ge=1)
 
 
 class BookUpdate(BaseModel):
-    # All fields are optional so clients can send partial updates.
-    title: str | None = Field(default=None, min_length=1, max_length=200)
-    author: str | None = Field(default=None, min_length=1, max_length=120)
-    genre: str | None = Field(default=None, min_length=1, max_length=80)
-    published_year: int | None = Field(default=None, ge=0, le=2100)
-    summary: str | None = Field(default=None, max_length=2000)
+    bookID: int | None = Field(default=None, ge=1)
+    title: str | None = Field(default=None, min_length=1, max_length=255)
+    authors: str | None = Field(default=None, min_length=1, max_length=255)
+    average_rating: float | None = Field(default=None, ge=0, le=5)
+    isbn: str | None = Field(default=None, min_length=1, max_length=20)
+    isbn13: str | None = Field(default=None, min_length=1, max_length=20)
+    language_code: str | None = Field(default=None, min_length=1, max_length=20)
+    num_pages: int | None = Field(default=None, ge=0)
+    ratings_count: int | None = Field(default=None, ge=0)
+    text_reviews_count: int | None = Field(default=None, ge=0)
+    publication_date: str | None = Field(default=None, min_length=1, max_length=20)
+    publisher: str | None = Field(default=None, min_length=1, max_length=255)
 
 
 class BookOut(BookBase):
-    # Response model includes generated database ID.
     id: int
+    bookID: int
 
-    # Allow returning SQLAlchemy objects directly from route handlers.
     model_config = ConfigDict(from_attributes=True)
+
+
+class RecommendationBreakdown(BaseModel):
+    model_similarity: float
+    authors_match: float
+    language_match: float
+    publisher_match: float
+    average_rating_score: float
+    ratings_count_score: float
+    duplicate_penalty: float
+    diversity_penalty: float
+
+    model_config = ConfigDict(protected_namespaces=())
+
+
+class BookRecommendationOut(BookOut):
+    recommendation_score: float
+    score_breakdown: RecommendationBreakdown
+    reason: str

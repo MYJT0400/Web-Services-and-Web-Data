@@ -1,0 +1,1183 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Length 1696 >>
+stream
+BT
+/F1 10 Tf
+50 770 Td
+() Tj
+0 -14 Td
+(API DOCUMENTATION - BOOK INSIGHTS API) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Version: 0.3.0) Tj
+0 -14 Td
+(Base URL \(local\): http://127.0.0.1:8000) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(1. Overview) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Book Insights API is a FastAPI web service backed by a SQLite database. It imports the) Tj
+0 -14 Td
+(  Goodreads `books.csv` dataset, exposes CRUD endpoints for book records, supports multi-field) Tj
+0 -14 Td
+(  search, and provides a hybrid similar-books recommendation endpoint.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Interactive Swagger documentation is available at:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(http://127.0.0.1:8000/docs) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(2. Authentication) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Write operations require an API key in the `X-API-Key` header.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- Header name: `X-API-Key`) Tj
+0 -14 Td
+(- Default local key: `coursework-demo-key`) Tj
+0 -14 Td
+(- Override with environment variable: `API_KEY`) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Protected endpoints:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- `POST /books`) Tj
+0 -14 Td
+(- `PUT /books/{book_id}`) Tj
+0 -14 Td
+(- `DELETE /books/{book_id}`) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Public endpoints:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- `GET /`) Tj
+0 -14 Td
+(- `GET /health`) Tj
+0 -14 Td
+(- `GET /books`) Tj
+0 -14 Td
+(- `GET /books/{book_id}`) Tj
+0 -14 Td
+(- `GET /books/{book_id}/recommendations`) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Authentication error response:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+({) Tj
+0 -14 Td
+(  "detail": "Invalid or missing API key") Tj
+0 -14 Td
+(}) Tj
+0 -14 Td
+() Tj
+ET
+endstream
+endobj
+3 0 obj
+<< /Type /Page /Parent 22 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+endobj
+4 0 obj
+<< /Length 2121 >>
+stream
+BT
+/F1 10 Tf
+50 770 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(3. Data Models) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(3.1 Book) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(The public book response follows the Goodreads dataset fields.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+({) Tj
+0 -14 Td
+(  "id": 1,) Tj
+0 -14 Td
+(  "bookID": 1,) Tj
+0 -14 Td
+(  "title": "Harry Potter and the Half-Blood Prince \(Harry Potter  #6\)",) Tj
+0 -14 Td
+(  "authors": "J.K. Rowling/Mary GrandPré",) Tj
+0 -14 Td
+(  "average_rating": 4.57,) Tj
+0 -14 Td
+(  "isbn": "0439785960",) Tj
+0 -14 Td
+(  "isbn13": "9780439785969",) Tj
+0 -14 Td
+(  "language_code": "eng",) Tj
+0 -14 Td
+(  "num_pages": 652,) Tj
+0 -14 Td
+(  "ratings_count": 2095690,) Tj
+0 -14 Td
+(  "text_reviews_count": 27591,) Tj
+0 -14 Td
+(  "publication_date": "9/16/2006",) Tj
+0 -14 Td
+(  "publisher": "Scholastic Inc.") Tj
+0 -14 Td
+(}) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Field constraints:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- `bookID`: optional when creating, integer >= 1. If omitted, the API assigns the next) Tj
+0 -14 Td
+(  available `bookID`.) Tj
+0 -14 Td
+(- `title`: required string, 1-255 characters.) Tj
+0 -14 Td
+(- `authors`: required string, 1-255 characters. Multiple authors may be separated with `/`,) Tj
+0 -14 Td
+(  matching the Goodreads CSV format.) Tj
+0 -14 Td
+(- `average_rating`: required number from 0 to 5.) Tj
+0 -14 Td
+(- `isbn`: required string, 1-20 characters.) Tj
+0 -14 Td
+(- `isbn13`: required string, 1-20 characters.) Tj
+0 -14 Td
+(- `language_code`: required string, 1-20 characters.) Tj
+0 -14 Td
+(- `num_pages`: required integer >= 0.) Tj
+0 -14 Td
+(- `ratings_count`: required integer >= 0.) Tj
+0 -14 Td
+(- `text_reviews_count`: required integer >= 0.) Tj
+0 -14 Td
+(- `publication_date`: required string, 1-20 characters.) Tj
+0 -14 Td
+(- `publisher`: required string, 1-255 characters.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(3.2 Similar Book Recommendation) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Recommendation responses include all book fields plus a final score, score breakdown, and) Tj
+0 -14 Td
+(  generated text reason.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 22 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 2008 >>
+stream
+BT
+/F1 10 Tf
+50 770 Td
+({) Tj
+0 -14 Td
+(  "id": 2,) Tj
+0 -14 Td
+(  "bookID": 2,) Tj
+0 -14 Td
+(  "title": "Harry Potter and the Order of the Phoenix \(Harry Potter  #5\)",) Tj
+0 -14 Td
+(  "authors": "J.K. Rowling/Mary GrandPré",) Tj
+0 -14 Td
+(  "average_rating": 4.49,) Tj
+0 -14 Td
+(  "isbn": "0439358078",) Tj
+0 -14 Td
+(  "isbn13": "9780439358071",) Tj
+0 -14 Td
+(  "language_code": "eng",) Tj
+0 -14 Td
+(  "num_pages": 870,) Tj
+0 -14 Td
+(  "ratings_count": 2153167,) Tj
+0 -14 Td
+(  "text_reviews_count": 29221,) Tj
+0 -14 Td
+(  "publication_date": "9/1/2004",) Tj
+0 -14 Td
+(  "publisher": "Scholastic Inc.",) Tj
+0 -14 Td
+(  "recommendation_score": 0.624531,) Tj
+0 -14 Td
+(  "score_breakdown": {) Tj
+0 -14 Td
+(    "model_similarity": 0.423,) Tj
+0 -14 Td
+(    "authors_match": 0.15,) Tj
+0 -14 Td
+(    "language_match": 0.1,) Tj
+0 -14 Td
+(    "publisher_match": 0.05,) Tj
+0 -14 Td
+(    "average_rating_score": 0.0898,) Tj
+0 -14 Td
+(    "ratings_count_score": 0.0976,) Tj
+0 -14 Td
+(    "duplicate_penalty": 0.0,) Tj
+0 -14 Td
+(    "diversity_penalty": 0.03) Tj
+0 -14 Td
+(  },) Tj
+0 -14 Td
+(  "reason": "This book stayed near the top after reranking: semantic similarity) Tj
+0 -14 Td
+(  contributed 0.423, and the final score after penalties is 0.625.") Tj
+0 -14 Td
+(}) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Recommendation scoring uses title embeddings plus reranking:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- Title embedding model similarity: 50%) Tj
+0 -14 Td
+(- Authors match: 15%) Tj
+0 -14 Td
+(- Language code match: 10%) Tj
+0 -14 Td
+(- Publisher match: 5%) Tj
+0 -14 Td
+(- Average rating: 10%) Tj
+0 -14 Td
+(- Ratings count: 10%) Tj
+0 -14 Td
+(- Duplicate title and repeated metadata penalties are applied to improve variety.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(4. Endpoints) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(4.1 Home Page) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- Method: `GET`) Tj
+0 -14 Td
+(- Path: `/`) Tj
+0 -14 Td
+(- Auth required: No) Tj
+0 -14 Td
+(- Response format: HTML) Tj
+0 -14 Td
+() Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 22 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 1568 >>
+stream
+BT
+/F1 10 Tf
+50 770 Td
+(Returns the browser-based control page for searching, selecting, creating, updating,) Tj
+0 -14 Td
+(  deleting, checking service health, and loading similar books.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(4.2 Health Check) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- Method: `GET`) Tj
+0 -14 Td
+(- Path: `/health`) Tj
+0 -14 Td
+(- Auth required: No) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Success response `200`:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+({) Tj
+0 -14 Td
+(  "status": "ok") Tj
+0 -14 Td
+(}) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(4.3 Create Book) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- Method: `POST`) Tj
+0 -14 Td
+(- Path: `/books`) Tj
+0 -14 Td
+(- Auth required: Yes, `X-API-Key`) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Request body:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+({) Tj
+0 -14 Td
+(  "bookID": 100001,) Tj
+0 -14 Td
+(  "title": "Clean Code",) Tj
+0 -14 Td
+(  "authors": "Robert C. Martin",) Tj
+0 -14 Td
+(  "average_rating": 4.4,) Tj
+0 -14 Td
+(  "isbn": "0132350882",) Tj
+0 -14 Td
+(  "isbn13": "9780132350884",) Tj
+0 -14 Td
+(  "language_code": "eng",) Tj
+0 -14 Td
+(  "num_pages": 464,) Tj
+0 -14 Td
+(  "ratings_count": 1000,) Tj
+0 -14 Td
+(  "text_reviews_count": 100,) Tj
+0 -14 Td
+(  "publication_date": "8/1/2008",) Tj
+0 -14 Td
+(  "publisher": "Prentice Hall") Tj
+0 -14 Td
+(}) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Success response `201`:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+({) Tj
+0 -14 Td
+(  "id": 11128,) Tj
+0 -14 Td
+(  "bookID": 100001,) Tj
+0 -14 Td
+(  "title": "Clean Code",) Tj
+0 -14 Td
+(  "authors": "Robert C. Martin",) Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 22 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Length 1975 >>
+stream
+BT
+/F1 10 Tf
+50 770 Td
+(  "average_rating": 4.4,) Tj
+0 -14 Td
+(  "isbn": "0132350882",) Tj
+0 -14 Td
+(  "isbn13": "9780132350884",) Tj
+0 -14 Td
+(  "language_code": "eng",) Tj
+0 -14 Td
+(  "num_pages": 464,) Tj
+0 -14 Td
+(  "ratings_count": 1000,) Tj
+0 -14 Td
+(  "text_reviews_count": 100,) Tj
+0 -14 Td
+(  "publication_date": "8/1/2008",) Tj
+0 -14 Td
+(  "publisher": "Prentice Hall") Tj
+0 -14 Td
+(}) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Common errors:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- `401`: invalid or missing API key.) Tj
+0 -14 Td
+(- `409`: `bookID already exists`.) Tj
+0 -14 Td
+(- `422`: validation error, for example `average_rating` greater than 5.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(4.4 List and Search Books) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- Method: `GET`) Tj
+0 -14 Td
+(- Path: `/books`) Tj
+0 -14 Td
+(- Auth required: No) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Query parameters:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- `skip`: integer, optional, default `0`, minimum `0`.) Tj
+0 -14 Td
+(- `limit`: integer, optional, default `20`, minimum `1`, maximum `100000`.) Tj
+0 -14 Td
+(- `book_id`: integer, optional, minimum `1`. Matches either internal `id` or Goodreads) Tj
+0 -14 Td
+(  `bookID`.) Tj
+0 -14 Td
+(- `title`: string, optional, partial match.) Tj
+0 -14 Td
+(- `authors`: string, optional, partial match.) Tj
+0 -14 Td
+(- `isbn`: string, optional, partial match.) Tj
+0 -14 Td
+(- `isbn13`: string, optional, partial match.) Tj
+0 -14 Td
+(- `language_code`: string, optional, partial match.) Tj
+0 -14 Td
+(- `publisher`: string, optional, partial match.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Example request:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(GET /books?title=Harry%20Potter&authors=Rowling&limit=5) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Success response `200`:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+([) Tj
+0 -14 Td
+(  {) Tj
+0 -14 Td
+(    "id": 1,) Tj
+0 -14 Td
+(    "bookID": 1,) Tj
+0 -14 Td
+(    "title": "Harry Potter and the Half-Blood Prince \(Harry Potter  #6\)",) Tj
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 22 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 10 0 R >>
+endobj
+12 0 obj
+<< /Length 1782 >>
+stream
+BT
+/F1 10 Tf
+50 770 Td
+(    "authors": "J.K. Rowling/Mary GrandPré",) Tj
+0 -14 Td
+(    "average_rating": 4.57,) Tj
+0 -14 Td
+(    "isbn": "0439785960",) Tj
+0 -14 Td
+(    "isbn13": "9780439785969",) Tj
+0 -14 Td
+(    "language_code": "eng",) Tj
+0 -14 Td
+(    "num_pages": 652,) Tj
+0 -14 Td
+(    "ratings_count": 2095690,) Tj
+0 -14 Td
+(    "text_reviews_count": 27591,) Tj
+0 -14 Td
+(    "publication_date": "9/16/2006",) Tj
+0 -14 Td
+(    "publisher": "Scholastic Inc.") Tj
+0 -14 Td
+(  }) Tj
+0 -14 Td
+(]) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Common errors:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- `422`: invalid query parameter, for example `limit=0`.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(4.5 Get Book by Database ID) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- Method: `GET`) Tj
+0 -14 Td
+(- Path: `/books/{book_id}`) Tj
+0 -14 Td
+(- Auth required: No) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Path parameters:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- `book_id`: internal database `id`, not necessarily the Goodreads `bookID`.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Success response `200`:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+({) Tj
+0 -14 Td
+(  "id": 1,) Tj
+0 -14 Td
+(  "bookID": 1,) Tj
+0 -14 Td
+(  "title": "Harry Potter and the Half-Blood Prince \(Harry Potter  #6\)",) Tj
+0 -14 Td
+(  "authors": "J.K. Rowling/Mary GrandPré",) Tj
+0 -14 Td
+(  "average_rating": 4.57,) Tj
+0 -14 Td
+(  "isbn": "0439785960",) Tj
+0 -14 Td
+(  "isbn13": "9780439785969",) Tj
+0 -14 Td
+(  "language_code": "eng",) Tj
+0 -14 Td
+(  "num_pages": 652,) Tj
+0 -14 Td
+(  "ratings_count": 2095690,) Tj
+0 -14 Td
+(  "text_reviews_count": 27591,) Tj
+0 -14 Td
+(  "publication_date": "9/16/2006",) Tj
+0 -14 Td
+(  "publisher": "Scholastic Inc.") Tj
+0 -14 Td
+(}) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Error response `404`:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+ET
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 22 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 12 0 R >>
+endobj
+14 0 obj
+<< /Length 1825 >>
+stream
+BT
+/F1 10 Tf
+50 770 Td
+({) Tj
+0 -14 Td
+(  "detail": "Book not found") Tj
+0 -14 Td
+(}) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(4.6 Get Similar Books) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- Method: `GET`) Tj
+0 -14 Td
+(- Path: `/books/{book_id}/recommendations`) Tj
+0 -14 Td
+(- Auth required: No) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Path parameters:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- `book_id`: internal database `id` for the selected book.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Query parameters:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- `limit`: integer, optional, default `5`, minimum `1`, maximum `20`.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Example request:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(GET /books/1/recommendations?limit=3) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Success response `200`:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+([) Tj
+0 -14 Td
+(  {) Tj
+0 -14 Td
+(    "id": 2,) Tj
+0 -14 Td
+(    "bookID": 2,) Tj
+0 -14 Td
+(    "title": "Harry Potter and the Order of the Phoenix \(Harry Potter  #5\)",) Tj
+0 -14 Td
+(    "authors": "J.K. Rowling/Mary GrandPré",) Tj
+0 -14 Td
+(    "average_rating": 4.49,) Tj
+0 -14 Td
+(    "isbn": "0439358078",) Tj
+0 -14 Td
+(    "isbn13": "9780439358071",) Tj
+0 -14 Td
+(    "language_code": "eng",) Tj
+0 -14 Td
+(    "num_pages": 870,) Tj
+0 -14 Td
+(    "ratings_count": 2153167,) Tj
+0 -14 Td
+(    "text_reviews_count": 29221,) Tj
+0 -14 Td
+(    "publication_date": "9/1/2004",) Tj
+0 -14 Td
+(    "publisher": "Scholastic Inc.",) Tj
+0 -14 Td
+(    "recommendation_score": 0.624531,) Tj
+0 -14 Td
+(    "score_breakdown": {) Tj
+0 -14 Td
+(      "model_similarity": 0.423,) Tj
+0 -14 Td
+(      "authors_match": 0.15,) Tj
+0 -14 Td
+(      "language_match": 0.1,) Tj
+0 -14 Td
+(      "publisher_match": 0.05,) Tj
+0 -14 Td
+(      "average_rating_score": 0.0898,) Tj
+0 -14 Td
+(      "ratings_count_score": 0.0976,) Tj
+ET
+endstream
+endobj
+15 0 obj
+<< /Type /Page /Parent 22 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 14 0 R >>
+endobj
+16 0 obj
+<< /Length 1676 >>
+stream
+BT
+/F1 10 Tf
+50 770 Td
+(      "duplicate_penalty": 0.0,) Tj
+0 -14 Td
+(      "diversity_penalty": 0.03) Tj
+0 -14 Td
+(    },) Tj
+0 -14 Td
+(    "reason": "Recommended because its title is semantically close to the selected) Tj
+0 -14 Td
+(  book and the metadata supports the rerank score.") Tj
+0 -14 Td
+(  }) Tj
+0 -14 Td
+(]) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Common errors:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- `404`: selected book does not exist.) Tj
+0 -14 Td
+(- `422`: invalid `limit`.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(4.7 Update Book) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- Method: `PUT`) Tj
+0 -14 Td
+(- Path: `/books/{book_id}`) Tj
+0 -14 Td
+(- Auth required: Yes, `X-API-Key`) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Path parameters:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- `book_id`: internal database `id`.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Request body:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(All book fields are optional for update. At least one field must be supplied.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+({) Tj
+0 -14 Td
+(  "publisher": "Pearson",) Tj
+0 -14 Td
+(  "average_rating": 4.5) Tj
+0 -14 Td
+(}) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Success response `200`:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+({) Tj
+0 -14 Td
+(  "id": 11128,) Tj
+0 -14 Td
+(  "bookID": 100001,) Tj
+0 -14 Td
+(  "title": "Clean Code",) Tj
+0 -14 Td
+(  "authors": "Robert C. Martin",) Tj
+0 -14 Td
+(  "average_rating": 4.5,) Tj
+0 -14 Td
+(  "isbn": "0132350882",) Tj
+0 -14 Td
+(  "isbn13": "9780132350884",) Tj
+0 -14 Td
+(  "language_code": "eng",) Tj
+0 -14 Td
+(  "num_pages": 464,) Tj
+0 -14 Td
+(  "ratings_count": 1000,) Tj
+0 -14 Td
+(  "text_reviews_count": 100,) Tj
+0 -14 Td
+(  "publication_date": "8/1/2008",) Tj
+ET
+endstream
+endobj
+17 0 obj
+<< /Type /Page /Parent 22 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 16 0 R >>
+endobj
+18 0 obj
+<< /Length 1410 >>
+stream
+BT
+/F1 10 Tf
+50 770 Td
+(  "publisher": "Pearson") Tj
+0 -14 Td
+(}) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Common errors:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- `400`: no fields provided.) Tj
+0 -14 Td
+(- `401`: invalid or missing API key.) Tj
+0 -14 Td
+(- `404`: book not found.) Tj
+0 -14 Td
+(- `409`: updated `bookID` already exists.) Tj
+0 -14 Td
+(- `422`: validation error.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(4.8 Delete Book) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- Method: `DELETE`) Tj
+0 -14 Td
+(- Path: `/books/{book_id}`) Tj
+0 -14 Td
+(- Auth required: Yes, `X-API-Key`) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Path parameters:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- `book_id`: internal database `id`.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Success response:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- `204 No Content`) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Common errors:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(- `401`: invalid or missing API key.) Tj
+0 -14 Td
+(- `404`: book not found.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(5. Local Run Commands) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Install dependencies:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(pip install -r requirements.txt) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Start server:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(python -m uvicorn app.main:app --reload) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Open the browser UI:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(http://127.0.0.1:8000/) Tj
+ET
+endstream
+endobj
+19 0 obj
+<< /Type /Page /Parent 22 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 18 0 R >>
+endobj
+20 0 obj
+<< /Length 1554 >>
+stream
+BT
+/F1 10 Tf
+50 770 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Open Swagger UI:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(http://127.0.0.1:8000/docs) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Run tests:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(pytest -q tests -p no:cacheprovider) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(6. cURL Examples) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Create:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(curl -X POST "http://127.0.0.1:8000/books" /) Tj
+0 -14 Td
+(  -H "Content-Type: application/json" /) Tj
+0 -14 Td
+(  -H "X-API-Key: coursework-demo-key" /) Tj
+0 -14 Td
+(  -d "{/"bookID/":100001,/"title/":/"Clean Code/",/"authors/":/"Robert C. Martin/",/) Tj
+0 -14 Td
+(  "average_rating/":4.4,/"isbn/":/"0132350882/",/"isbn13/":/"9780132350884/",/"languag) Tj
+0 -14 Td
+(  e_code/":/"eng/",/"num_pages/":464,/"ratings_count/":1000,/"text_reviews_count/":100) Tj
+0 -14 Td
+(  ,/"publication_date/":/"8/1/2008/",/"publisher/":/"Prentice Hall/"}") Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Search:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(curl "http://127.0.0.1:8000/books?title=Harry%20Potter&authors=Rowling&limit=5") Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Get similar books:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(curl "http://127.0.0.1:8000/books/1/recommendations?limit=3") Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Delete:) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(curl -X DELETE "http://127.0.0.1:8000/books/11128" /) Tj
+0 -14 Td
+(  -H "X-API-Key: coursework-demo-key") Tj
+0 -14 Td
+() Tj
+ET
+endstream
+endobj
+21 0 obj
+<< /Type /Page /Parent 22 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 20 0 R >>
+endobj
+22 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R 9 0 R 11 0 R 13 0 R 15 0 R 17 0 R 19 0 R 21 0 R] /Count 10 >>
+endobj
+23 0 obj
+<< /Type /Catalog /Pages 22 0 R >>
+endobj
+xref
+0 24
+0000000000 65535 f 
+0000000009 00000 n 
+0000000079 00000 n 
+0000001827 00000 n 
+0000001954 00000 n 
+0000004127 00000 n 
+0000004254 00000 n 
+0000006314 00000 n 
+0000006441 00000 n 
+0000008061 00000 n 
+0000008188 00000 n 
+0000010216 00000 n 
+0000010345 00000 n 
+0000012180 00000 n 
+0000012309 00000 n 
+0000014187 00000 n 
+0000014316 00000 n 
+0000016045 00000 n 
+0000016174 00000 n 
+0000017637 00000 n 
+0000017766 00000 n 
+0000019373 00000 n 
+0000019502 00000 n 
+0000019621 00000 n 
+trailer
+<< /Size 24 /Root 23 0 R >>
+startxref
+19672
+%%EOF

@@ -1,13 +1,25 @@
 from fastapi import HTTPException, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from .models import Book
 from .schemas import BookCreate, BookUpdate
 
 
+def _next_book_id(db: Session) -> int:
+    return (db.query(func.max(Book.bookID)).scalar() or 0) + 1
+
+
 def create_book(db: Session, payload: BookCreate) -> Book:
-    # Convert validated request payload into ORM model and persist it.
-    book = Book(**payload.model_dump())
+    data = payload.model_dump()
+    if data["bookID"] is None:
+        data["bookID"] = _next_book_id(db)
+
+    existing = db.query(Book).filter(Book.bookID == data["bookID"]).first()
+    if existing:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="bookID already exists")
+
+    book = Book(**data)
     db.add(book)
     db.commit()
     db.refresh(book)
@@ -15,7 +27,6 @@ def create_book(db: Session, payload: BookCreate) -> Book:
 
 
 def list_books(db: Session, skip: int, limit: int) -> list[Book]:
-    # Basic pagination for list endpoint.
     return db.query(Book).offset(skip).limit(limit).all()
 
 
@@ -25,29 +36,33 @@ def search_books(
     limit: int,
     book_id: int | None = None,
     title: str | None = None,
-    author: str | None = None,
-    genre: str | None = None,
-    published_year: int | None = None,
+    authors: str | None = None,
+    isbn: str | None = None,
+    isbn13: str | None = None,
+    language_code: str | None = None,
+    publisher: str | None = None,
 ) -> list[Book]:
-    # Apply optional filters so users can query by multiple fields.
     query = db.query(Book)
 
     if book_id is not None:
-        query = query.filter(Book.id == book_id)
+        query = query.filter((Book.id == book_id) | (Book.bookID == book_id))
     if title:
         query = query.filter(Book.title.ilike(f"%{title}%"))
-    if author:
-        query = query.filter(Book.author.ilike(f"%{author}%"))
-    if genre:
-        query = query.filter(Book.genre.ilike(f"%{genre}%"))
-    if published_year is not None:
-        query = query.filter(Book.published_year == published_year)
+    if authors:
+        query = query.filter(Book.authors.ilike(f"%{authors}%"))
+    if isbn:
+        query = query.filter(Book.isbn.ilike(f"%{isbn}%"))
+    if isbn13:
+        query = query.filter(Book.isbn13.ilike(f"%{isbn13}%"))
+    if language_code:
+        query = query.filter(Book.language_code.ilike(f"%{language_code}%"))
+    if publisher:
+        query = query.filter(Book.publisher.ilike(f"%{publisher}%"))
 
     return query.offset(skip).limit(limit).all()
 
 
 def get_book_or_404(db: Session, book_id: int) -> Book:
-    # Centralized lookup so all endpoints share the same 404 behavior.
     book = db.query(Book).filter(Book.id == book_id).first()
     if not book:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
@@ -56,11 +71,16 @@ def get_book_or_404(db: Session, book_id: int) -> Book:
 
 def update_book(db: Session, book_id: int, payload: BookUpdate) -> Book:
     book = get_book_or_404(db, book_id)
-    # Only update fields explicitly sent by the client.
     updates = payload.model_dump(exclude_unset=True)
 
     if not updates:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No fields provided")
+
+    new_book_id = updates.get("bookID")
+    if new_book_id is not None and new_book_id != book.bookID:
+        existing = db.query(Book).filter(Book.bookID == new_book_id).first()
+        if existing:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="bookID already exists")
 
     for field, value in updates.items():
         setattr(book, field, value)
@@ -71,7 +91,6 @@ def update_book(db: Session, book_id: int, payload: BookUpdate) -> Book:
 
 
 def delete_book(db: Session, book_id: int) -> None:
-    # Reuse lookup helper to return 404 for unknown IDs.
     book = get_book_or_404(db, book_id)
     db.delete(book)
     db.commit()
