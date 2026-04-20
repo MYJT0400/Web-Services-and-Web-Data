@@ -161,7 +161,7 @@ Embedding details:
 - Model name: `BAAI/bge-small-en-v1.5`
 - Local model cache path: `.models/fastembed-bge-small-en-v1.5`
 - Embeddings are computed from book titles using FastEmbed on ONNX Runtime, without PyTorch.
-- If a complete FastEmbed snapshot is already present locally, the app loads that snapshot directly instead of downloading from Hugging Face.
+- If a complete FastEmbed snapshot is already present locally, the app registers a local FastEmbed model that points to `model_optimized.onnx` and loads that snapshot directly instead of downloading from Hugging Face.
 - Title embeddings are stored in `books.db` on startup for faster recommendations.
 
 ## Data Import and Startup

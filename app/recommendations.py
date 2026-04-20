@@ -7,12 +7,14 @@ from functools import lru_cache
 from pathlib import Path
 
 from fastembed import TextEmbedding
+from fastembed.common.model_description import ModelSource, PoolingType
 from sqlalchemy.orm import Session
 
 from .models import Book
 
 MODEL_CACHE_DIR = Path(__file__).resolve().parents[1] / ".models" / "fastembed-bge-small-en-v1.5"
 EMBEDDING_MODEL_NAME = "BAAI/bge-small-en-v1.5"
+LOCAL_EMBEDDING_MODEL_NAME = "local-bge-small-en-v1.5"
 
 # Requested rerank weights.
 MODEL_SIMILARITY_WEIGHT = 0.50
@@ -314,8 +316,9 @@ def _ensure_local_model() -> TextEmbedding:
             file=sys.stderr,
             flush=True,
         )
+        _register_local_fastembed_model()
         return TextEmbedding(
-            model_name=EMBEDDING_MODEL_NAME,
+            model_name=LOCAL_EMBEDDING_MODEL_NAME,
             cache_dir=str(MODEL_CACHE_DIR),
             specific_model_path=str(local_snapshot),
         )
@@ -348,6 +351,21 @@ def _ensure_local_model() -> TextEmbedding:
         )
 
     return model
+
+
+def _register_local_fastembed_model() -> None:
+    supported_models = TextEmbedding.list_supported_models()
+    if any(model["model"] == LOCAL_EMBEDDING_MODEL_NAME for model in supported_models):
+        return
+
+    TextEmbedding.add_custom_model(
+        model=LOCAL_EMBEDDING_MODEL_NAME,
+        pooling=PoolingType.MEAN,
+        normalization=True,
+        sources=ModelSource(hf="qdrant/bge-small-en-v1.5-onnx-q"),
+        dim=384,
+        model_file="model_optimized.onnx",
+    )
 
 
 def _find_local_fastembed_snapshot() -> Path | None:
