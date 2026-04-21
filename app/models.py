@@ -1,24 +1,26 @@
-from sqlalchemy import Float, Integer, LargeBinary, String
-from sqlalchemy.orm import Mapped, mapped_column
-
-from .database import Base
+from django.db import models
 
 
-class Book(Base):
-    __tablename__ = "books"
+class Book(models.Model):
+    bookID = models.PositiveIntegerField(unique=True, db_index=True)
+    title = models.CharField(max_length=255, db_index=True)
+    authors = models.CharField(max_length=255, db_index=True)
+    average_rating = models.FloatField()
+    isbn = models.CharField(max_length=20, db_index=True)
+    isbn13 = models.CharField(max_length=20, db_index=True)
+    language_code = models.CharField(max_length=20, db_index=True)
+    num_pages = models.IntegerField()
+    ratings_count = models.IntegerField()
+    text_reviews_count = models.IntegerField()
+    publication_date = models.CharField(max_length=20)
+    publisher = models.CharField(max_length=255, db_index=True)
+    title_embedding = models.BinaryField(null=True, blank=True)
+    embedding_model = models.CharField(max_length=80, null=True, blank=True)
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    bookID: Mapped[int] = mapped_column(Integer, unique=True, index=True, nullable=False)
-    title: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
-    authors: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
-    average_rating: Mapped[float] = mapped_column(Float, nullable=False)
-    isbn: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
-    isbn13: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
-    language_code: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
-    num_pages: Mapped[int] = mapped_column(Integer, nullable=False)
-    ratings_count: Mapped[int] = mapped_column(Integer, nullable=False)
-    text_reviews_count: Mapped[int] = mapped_column(Integer, nullable=False)
-    publication_date: Mapped[str] = mapped_column(String(20), nullable=False)
-    publisher: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
-    title_embedding: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
-    embedding_model: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    class Meta:
+        db_table = "books"
+        managed = False
+        ordering = ["id"]
+
+    def __str__(self) -> str:
+        return f"{self.title} ({self.bookID})"

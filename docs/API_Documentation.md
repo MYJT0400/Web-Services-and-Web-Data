@@ -1,11 +1,11 @@
 # API Documentation - Book Insights API
 
-Version: 0.3.0
+Version: 1.0.0
 Base URL (local): http://127.0.0.1:8000
 
 ## 1. Overview
 
-Book Insights API is a FastAPI web service backed by a SQLite database. It imports the Goodreads `books.csv` dataset, exposes CRUD endpoints for book records, supports multi-field search, and provides a hybrid similar-books recommendation endpoint.
+Book Insights API is a Django REST Framework web service backed by SQLite. It imports the Goodreads `books.csv` dataset, exposes CRUD endpoints for book records, supports multi-field search, and provides a hybrid similar-books recommendation endpoint.
 
 The SQLite database file is fixed to the project root as `books.db`, so local runs and deployment use the same database location instead of relying on the current working directory.
 
@@ -13,6 +13,12 @@ Interactive Swagger documentation is available at:
 
 ```text
 http://127.0.0.1:8000/docs
+```
+
+The OpenAPI schema is available at:
+
+```text
+http://127.0.0.1:8000/schema/
 ```
 
 ## 2. Authentication
@@ -36,6 +42,8 @@ Public endpoints:
 - `GET /books`
 - `GET /books/{book_id}`
 - `GET /books/{book_id}/recommendations`
+- `GET /docs`
+- `GET /schema/`
 
 Authentication error response:
 
@@ -43,6 +51,20 @@ Authentication error response:
 {
   "detail": "Invalid or missing API key"
 }
+```
+
+Swagger UI authentication:
+
+1. Open `/docs`.
+2. Click `Authorize`.
+3. Enter the API key in `ApiKeyAuth`.
+4. Click `Authorize`.
+5. Run `POST`, `PUT`, or `DELETE` requests from Swagger UI.
+
+Default local API key:
+
+```text
+coursework-demo-key
 ```
 
 ## 3. Data Models
@@ -56,7 +78,7 @@ The public book response follows the Goodreads dataset fields.
   "id": 1,
   "bookID": 1,
   "title": "Harry Potter and the Half-Blood Prince (Harry Potter  #6)",
-  "authors": "J.K. Rowling/Mary GrandPré",
+  "authors": "J.K. Rowling/Mary GrandPre",
   "average_rating": 4.57,
   "isbn": "0439785960",
   "isbn13": "9780439785969",
@@ -73,7 +95,7 @@ Field constraints:
 
 - `bookID`: optional when creating, integer >= 1. If omitted, the API assigns the next available `bookID`.
 - `title`: required string, 1-255 characters.
-- `authors`: required string, 1-255 characters. Multiple authors may be separated with `/`, matching the Goodreads CSV format.
+- `authors`: required string, 1-255 characters.
 - `average_rating`: required number from 0 to 5.
 - `isbn`: required string, 1-20 characters.
 - `isbn13`: required string, 1-20 characters.
@@ -93,7 +115,7 @@ Recommendation responses include all book fields plus a final score, score break
   "id": 2,
   "bookID": 2,
   "title": "Harry Potter and the Order of the Phoenix (Harry Potter  #5)",
-  "authors": "J.K. Rowling/Mary GrandPré",
+  "authors": "J.K. Rowling/Mary GrandPre",
   "average_rating": 4.49,
   "isbn": "0439358078",
   "isbn13": "9780439358071",
@@ -131,21 +153,19 @@ Recommendation scoring uses title embeddings plus reranking:
 - Average rating: 10%
 - Ratings count: 10%
 - Duplicate title and repeated metadata penalties are applied to improve variety.
-- A duplicate title compared with the target book still receives a strong fixed penalty.
+- A duplicate title compared with the target book receives a strong fixed penalty.
 - For later recommendation positions, each previously selected book with overlapping authors deducts one quarter of the author score, capped at the full 15% author weight.
 - The same quarter-step rule is also applied to repeated language code and repeated publisher, each capped at its own maximum rerank weight.
-- The API returns the diversity penalty as separate fields for title, authors, language, and publisher, plus the total diversity penalty.
-- Title embeddings are generated locally with `fastembed` using the `BAAI/bge-small-en-v1.5` ONNX model, so PyTorch is not required for recommendation inference.
-- If the FastEmbed snapshot exists under `.models/fastembed-bge-small-en-v1.5`, the app registers a local FastEmbed model pointing to `model_optimized.onnx` and loads that local snapshot directly, so it does not need to contact Hugging Face at startup.
+- Title embeddings are generated locally with `fastembed` using the `BAAI/bge-small-en-v1.5` ONNX model, so PyTorch is not required.
 
 Penalty field meanings:
 
-- `duplicate_penalty`: compares the candidate book with the selected target book. It is used to reduce the score of different editions or records with the same normalized title as the selected book.
-- `title_diversity_penalty`: compares the candidate book with books already selected earlier in the recommendation list. It is used to reduce repeated titles inside the returned list.
-- `authors_diversity_penalty`: list-level author-repeat penalty. Each earlier selected book with overlapping authors deducts one quarter of the author rerank weight, capped at the full author weight.
-- `language_diversity_penalty`: list-level language-repeat penalty. Each earlier selected book with the same language code deducts one quarter of the language rerank weight, capped at the full language weight.
-- `publisher_diversity_penalty`: list-level publisher-repeat penalty. Each earlier selected book with the same publisher deducts one quarter of the publisher rerank weight, capped at the full publisher weight.
-- `diversity_penalty`: total list-level diversity penalty, calculated as `title_diversity_penalty + authors_diversity_penalty + language_diversity_penalty + publisher_diversity_penalty`.
+- `duplicate_penalty`: compares the candidate book with the selected target book.
+- `title_diversity_penalty`: compares the candidate book with books already selected earlier in the recommendation list.
+- `authors_diversity_penalty`: list-level author-repeat penalty.
+- `language_diversity_penalty`: list-level language-repeat penalty.
+- `publisher_diversity_penalty`: list-level publisher-repeat penalty.
+- `diversity_penalty`: total list-level diversity penalty.
 
 ## 4. Endpoints
 
@@ -197,31 +217,13 @@ Request body:
 }
 ```
 
-Success response `201`:
-
-```json
-{
-  "id": 11128,
-  "bookID": 100001,
-  "title": "Clean Code",
-  "authors": "Robert C. Martin",
-  "average_rating": 4.4,
-  "isbn": "0132350882",
-  "isbn13": "9780132350884",
-  "language_code": "eng",
-  "num_pages": 464,
-  "ratings_count": 1000,
-  "text_reviews_count": 100,
-  "publication_date": "8/1/2008",
-  "publisher": "Prentice Hall"
-}
-```
+Success response `201`: created book JSON.
 
 Common errors:
 
 - `401`: invalid or missing API key.
 - `409`: `bookID already exists`.
-- `422`: validation error, for example `average_rating` greater than 5.
+- `400`: validation error.
 
 ### 4.4 List and Search Books
 
@@ -247,31 +249,9 @@ Example request:
 GET /books?title=Harry%20Potter&authors=Rowling&limit=5
 ```
 
-Success response `200`:
-
-```json
-[
-  {
-    "id": 1,
-    "bookID": 1,
-    "title": "Harry Potter and the Half-Blood Prince (Harry Potter  #6)",
-    "authors": "J.K. Rowling/Mary GrandPré",
-    "average_rating": 4.57,
-    "isbn": "0439785960",
-    "isbn13": "9780439785969",
-    "language_code": "eng",
-    "num_pages": 652,
-    "ratings_count": 2095690,
-    "text_reviews_count": 27591,
-    "publication_date": "9/16/2006",
-    "publisher": "Scholastic Inc."
-  }
-]
-```
-
 Common errors:
 
-- `422`: invalid query parameter, for example `limit=0`.
+- `400`: invalid query parameter, for example `limit=0`.
 
 ### 4.5 Get Book by Database ID
 
@@ -283,33 +263,9 @@ Path parameters:
 
 - `book_id`: internal database `id`, not necessarily the Goodreads `bookID`.
 
-Success response `200`:
+Common errors:
 
-```json
-{
-  "id": 1,
-  "bookID": 1,
-  "title": "Harry Potter and the Half-Blood Prince (Harry Potter  #6)",
-  "authors": "J.K. Rowling/Mary GrandPré",
-  "average_rating": 4.57,
-  "isbn": "0439785960",
-  "isbn13": "9780439785969",
-  "language_code": "eng",
-  "num_pages": 652,
-  "ratings_count": 2095690,
-  "text_reviews_count": 27591,
-  "publication_date": "9/16/2006",
-  "publisher": "Scholastic Inc."
-}
-```
-
-Error response `404`:
-
-```json
-{
-  "detail": "Book not found"
-}
-```
+- `404`: book not found.
 
 ### 4.6 Get Similar Books
 
@@ -325,54 +281,10 @@ Query parameters:
 
 - `limit`: integer, optional, default `5`, minimum `1`, maximum `20`.
 
-Example request:
-
-```text
-GET /books/1/recommendations?limit=3
-```
-
-Success response `200`:
-
-```json
-[
-  {
-    "id": 2,
-    "bookID": 2,
-    "title": "Harry Potter and the Order of the Phoenix (Harry Potter  #5)",
-    "authors": "J.K. Rowling/Mary GrandPré",
-    "average_rating": 4.49,
-    "isbn": "0439358078",
-    "isbn13": "9780439358071",
-    "language_code": "eng",
-    "num_pages": 870,
-    "ratings_count": 2153167,
-    "text_reviews_count": 29221,
-    "publication_date": "9/1/2004",
-    "publisher": "Scholastic Inc.",
-    "recommendation_score": 0.624531,
-    "score_breakdown": {
-      "model_similarity": 0.423,
-      "authors_match": 0.15,
-      "language_match": 0.1,
-      "publisher_match": 0.05,
-      "average_rating_score": 0.0898,
-      "ratings_count_score": 0.0976,
-      "duplicate_penalty": 0.0,
-      "title_diversity_penalty": 0.0,
-      "authors_diversity_penalty": 0.0375,
-      "language_diversity_penalty": 0.025,
-      "publisher_diversity_penalty": 0.0125,
-      "diversity_penalty": 0.075
-    },
-    "reason": "Recommended because its title is semantically close to the selected book and the metadata supports the rerank score."
-  }
-]
-```
-
 Common errors:
 
 - `404`: selected book does not exist.
-- `422`: invalid `limit`.
+- `400`: invalid `limit`.
 
 ### 4.7 Update Book
 
@@ -395,33 +307,12 @@ All book fields are optional for update. At least one field must be supplied.
 }
 ```
 
-Success response `200`:
-
-```json
-{
-  "id": 11128,
-  "bookID": 100001,
-  "title": "Clean Code",
-  "authors": "Robert C. Martin",
-  "average_rating": 4.5,
-  "isbn": "0132350882",
-  "isbn13": "9780132350884",
-  "language_code": "eng",
-  "num_pages": 464,
-  "ratings_count": 1000,
-  "text_reviews_count": 100,
-  "publication_date": "8/1/2008",
-  "publisher": "Pearson"
-}
-```
-
 Common errors:
 
-- `400`: no fields provided.
+- `400`: no fields provided or validation error.
 - `401`: invalid or missing API key.
 - `404`: book not found.
 - `409`: updated `bookID` already exists.
-- `422`: validation error.
 
 ### 4.8 Delete Book
 
@@ -450,10 +341,16 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
+Initialize database and embeddings:
+
+```bash
+python manage.py initbooks
+```
+
 Start server:
 
 ```bash
-python -m uvicorn app.main:app --reload
+python manage.py runserver
 ```
 
 Open the browser UI:
@@ -468,51 +365,7 @@ Open Swagger UI:
 http://127.0.0.1:8000/docs
 ```
 
-Run tests:
-
-```bash
-pytest -q tests -p no:cacheprovider
-```
-
-## 6. PythonAnywhere WSGI Deployment
-
-This project can be deployed on PythonAnywhere using a traditional WSGI web app, even though the core framework is FastAPI. The repository includes [wsgi.py](/d:/desktop/web/cwk1/wsgi.py), which adapts the FastAPI app to a WSGI callable by using `a2wsgi`.
-
-Important deployment note:
-
-- `app.main` automatically initializes the database for local development.
-- `wsgi.py` sets `AUTO_INITIALIZE_DATABASE=0` so the website worker does not import CSV data or warm embeddings during each reload.
-- Before reloading the site, initialize the database once from a Bash console:
-
-```bash
-cd ~/Web-Services-and-Web-Data
-python -c "from app.seed import initialize_database; initialize_database(); print('ready')"
-```
-
-Install dependencies on PythonAnywhere:
-
-```bash
-python -m pip install --user -r requirements.txt
-```
-
-Minimal WSGI config contents:
-
-```python
-import sys
-path = "/home/MX0000/Web-Services-and-Web-Data"
-if path not in sys.path:
-    sys.path.append(path)
-
-from wsgi import application
-```
-
-After reloading the web app, verify:
-
-- `GET /health`
-- `GET /`
-- `GET /docs`
-
-## 7. cURL Examples
+## 6. cURL Examples
 
 Create:
 

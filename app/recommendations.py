@@ -8,15 +8,13 @@ from pathlib import Path
 
 from fastembed import TextEmbedding
 from fastembed.common.model_description import ModelSource, PoolingType
-from sqlalchemy.orm import Session
 
+from .database import MODEL_CACHE_DIR
 from .models import Book
 
-MODEL_CACHE_DIR = Path(__file__).resolve().parents[1] / ".models" / "fastembed-bge-small-en-v1.5"
 EMBEDDING_MODEL_NAME = "BAAI/bge-small-en-v1.5"
 LOCAL_EMBEDDING_MODEL_NAME = "local-bge-small-en-v1.5"
 
-# Requested rerank weights.
 MODEL_SIMILARITY_WEIGHT = 0.50
 AUTHORS_MATCH_WEIGHT = 0.15
 LANGUAGE_MATCH_WEIGHT = 0.10
@@ -24,7 +22,6 @@ PUBLISHER_MATCH_WEIGHT = 0.05
 AVERAGE_RATING_WEIGHT = 0.10
 RATINGS_COUNT_WEIGHT = 0.10
 
-# Diversity penalties applied during final selection.
 SAME_TITLE_PENALTY = 0.45
 AUTHORS_REPEAT_PENALTY_STEP = AUTHORS_MATCH_WEIGHT / 4
 LANGUAGE_REPEAT_PENALTY_STEP = LANGUAGE_MATCH_WEIGHT / 4
@@ -57,13 +54,12 @@ REASON_TEMPLATES = [
 ]
 
 
-def warm_embeddings(db: Session) -> int:
-    books = db.query(Book).all()
-    missing_books = [
-        book
-        for book in books
-        if book.title_embedding is None or book.embedding_model != EMBEDDING_MODEL_NAME
-    ]
+def warm_embeddings() -> int:
+    missing_books = list(
+        Book.objects.filter(title_embedding__isnull=True)
+    ) + list(Book.objects.exclude(embedding_model=EMBEDDING_MODEL_NAME).exclude(title_embedding__isnull=True))
+    deduped_books = {book.id: book for book in missing_books}.values()
+    missing_books = list(deduped_books)
     if not missing_books:
         return 0
 
@@ -72,23 +68,18 @@ def warm_embeddings(db: Session) -> int:
         book.title_embedding = _pack_embedding(embedding)
         book.embedding_model = EMBEDDING_MODEL_NAME
 
-    db.commit()
+    Book.objects.bulk_update(missing_books, ["title_embedding", "embedding_model"])
     return len(missing_books)
 
 
-def recommend_books(db: Session, target: Book, limit: int = 5) -> list[dict[str, object]]:
+def recommend_books(target: Book, limit: int = 5) -> list[dict[str, object]]:
     if target.title_embedding is None or target.embedding_model != EMBEDDING_MODEL_NAME:
-        warm_embeddings(db)
-        db.refresh(target)
+        warm_embeddings()
+        target.refresh_from_db()
 
-    candidates = (
-        db.query(Book)
-        .filter(
-            Book.id != target.id,
-            Book.title_embedding.is_not(None),
-            Book.embedding_model == EMBEDDING_MODEL_NAME,
-        )
-        .all()
+    candidates = list(
+        Book.objects.exclude(id=target.id)
+        .filter(title_embedding__isnull=False, embedding_model=EMBEDDING_MODEL_NAME)
     )
     if not candidates:
         return []
@@ -114,16 +105,68 @@ def recommend_books(db: Session, target: Book, limit: int = 5) -> list[dict[str,
             "average_rating_score": average_rating_score * AVERAGE_RATING_WEIGHT,
             "ratings_count_score": ratings_count_score * RATINGS_COUNT_WEIGHT,
         }
-        base_score = sum(weighted_scores.values())
         scored_candidates.append(
             {
                 "book": candidate,
-                "base_score": base_score,
+                "base_score": sum(weighted_scores.values()),
                 "score_breakdown": {key: round(value, 6) for key, value in weighted_scores.items()},
             }
         )
 
     return _select_diverse_recommendations(target, scored_candidates, limit=limit)
+
+
+def build_recommendation_reason(target: Book, item: dict[str, object]) -> str:
+    candidate = item["book"]
+    breakdown = item["score_breakdown"]
+    metadata_matches = []
+    if breakdown["authors_match"] > 0:
+        metadata_matches.append("author overlap")
+    if breakdown["language_match"] > 0:
+        metadata_matches.append("same language")
+    if breakdown["publisher_match"] > 0:
+        metadata_matches.append("same publisher")
+    metadata_note = ", ".join(metadata_matches) if metadata_matches else "rating and popularity"
+    penalty = item["duplicate_penalty"] + item["diversity_penalty"]
+
+    template = random.choice(REASON_TEMPLATES)
+    return template.format(
+        target_title=target.title,
+        model_score=breakdown["model_similarity"],
+        popularity_score=breakdown["ratings_count_score"],
+        final_score=item["recommendation_score"],
+        metadata_note=metadata_note,
+        rating=candidate.average_rating,
+        ratings_count=candidate.ratings_count,
+        penalty=penalty,
+    )
+
+
+def serialize_recommendation(target: Book, item: dict[str, object]) -> dict[str, object]:
+    book = item["book"]
+    return {
+        "id": book.id,
+        "bookID": book.bookID,
+        "title": book.title,
+        "authors": book.authors,
+        "average_rating": book.average_rating,
+        "isbn": book.isbn,
+        "isbn13": book.isbn13,
+        "language_code": book.language_code,
+        "num_pages": book.num_pages,
+        "ratings_count": book.ratings_count,
+        "text_reviews_count": book.text_reviews_count,
+        "publication_date": book.publication_date,
+        "publisher": book.publisher,
+        "recommendation_score": item["recommendation_score"],
+        "score_breakdown": {
+            **item["score_breakdown"],
+            "duplicate_penalty": item["duplicate_penalty"],
+            **item["diversity_penalties"],
+            "diversity_penalty": item["diversity_penalty"],
+        },
+        "reason": build_recommendation_reason(target, item),
+    }
 
 
 def _select_diverse_recommendations(
@@ -165,33 +208,6 @@ def _select_diverse_recommendations(
         remaining = [item for item in remaining if item["book"].id != best_item["book"].id]
 
     return selected
-
-
-def build_recommendation_reason(target: Book, item: dict[str, object]) -> str:
-    candidate = item["book"]
-    breakdown = item["score_breakdown"]
-    metadata_matches = []
-    if breakdown["authors_match"] > 0:
-        metadata_matches.append("author overlap")
-    if breakdown["language_match"] > 0:
-        metadata_matches.append("same language")
-    if breakdown["publisher_match"] > 0:
-        metadata_matches.append("same publisher")
-    metadata_note = ", ".join(metadata_matches) if metadata_matches else "rating and popularity"
-    penalty = item["duplicate_penalty"] + item["diversity_penalty"]
-
-    template = random.choice(REASON_TEMPLATES)
-    return template.format(
-        target_title=target.title,
-        candidate_title=candidate.title,
-        model_score=breakdown["model_similarity"],
-        popularity_score=breakdown["ratings_count_score"],
-        final_score=item["recommendation_score"],
-        metadata_note=metadata_note,
-        rating=candidate.average_rating,
-        ratings_count=candidate.ratings_count,
-        penalty=penalty,
-    )
 
 
 def _duplicate_penalty(target: Book, candidate: Book) -> float:
@@ -262,10 +278,6 @@ def _authors_share_any(left_authors: str, right_authors: str) -> bool:
     return bool(_split_authors(left_authors) & _split_authors(right_authors))
 
 
-def _normalized_authors(value: str) -> str:
-    return "|".join(sorted(_split_authors(value)))
-
-
 def _normalized_title(value: str) -> str:
     normalized = _normalize_text(value)
     normalized = SERIES_NUMBER_PATTERN.sub(" ", normalized)
@@ -290,11 +302,12 @@ def _pack_embedding(values: list[float]) -> bytes:
     return struct.pack(f"<{len(values)}f", *values)
 
 
-def _unpack_embedding(blob: bytes) -> list[float]:
+def _unpack_embedding(blob: bytes | memoryview | None) -> list[float]:
     if not blob:
         return []
-    length = len(blob) // 4
-    return list(struct.unpack(f"<{length}f", blob))
+    raw = bytes(blob)
+    length = len(raw) // 4
+    return list(struct.unpack(f"<{length}f", raw))
 
 
 def _embed_titles(titles: list[str]) -> list[list[float]]:

@@ -1,7 +1,5 @@
-fastapi==0.115.0
-uvicorn[standard]==0.30.6
-SQLAlchemy==2.0.35
-pydantic==2.9.2
+Django==5.1.2
+djangorestframework==3.15.2
+drf-spectacular==0.27.2
 pytest==8.3.3
 fastembed==0.7.1
-a2wsgi==1.10.8

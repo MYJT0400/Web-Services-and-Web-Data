@@ -1,37 +1,24 @@
-from fastapi import HTTPException, status
-from sqlalchemy import func
-from sqlalchemy.orm import Session
+from django.db.models import Max, Q
+from rest_framework.exceptions import APIException, NotFound, ValidationError
 
 from .models import Book
-from .schemas import BookCreate, BookUpdate
 
 
-def _next_book_id(db: Session) -> int:
-    return (db.query(func.max(Book.bookID)).scalar() or 0) + 1
+class ConflictError(APIException):
+    status_code = 409
+    default_detail = "Conflict"
+    default_code = "conflict"
 
 
-def create_book(db: Session, payload: BookCreate) -> Book:
-    data = payload.model_dump()
-    if data["bookID"] is None:
-        data["bookID"] = _next_book_id(db)
-
-    existing = db.query(Book).filter(Book.bookID == data["bookID"]).first()
-    if existing:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="bookID already exists")
-
-    book = Book(**data)
-    db.add(book)
-    db.commit()
-    db.refresh(book)
-    return book
+def next_book_id() -> int:
+    return (Book.objects.aggregate(max_id=Max("bookID"))["max_id"] or 0) + 1
 
 
-def list_books(db: Session, skip: int, limit: int) -> list[Book]:
-    return db.query(Book).offset(skip).limit(limit).all()
+def list_books(skip: int, limit: int):
+    return Book.objects.all()[skip : skip + limit]
 
 
 def search_books(
-    db: Session,
     skip: int,
     limit: int,
     book_id: int | None = None,
@@ -41,56 +28,59 @@ def search_books(
     isbn13: str | None = None,
     language_code: str | None = None,
     publisher: str | None = None,
-) -> list[Book]:
-    query = db.query(Book)
-
+):
+    query = Q()
     if book_id is not None:
-        query = query.filter(Book.bookID == book_id)
+        query &= Q(bookID=book_id)
     if title:
-        query = query.filter(Book.title.ilike(f"%{title}%"))
+        query &= Q(title__icontains=title)
     if authors:
-        query = query.filter(Book.authors.ilike(f"%{authors}%"))
+        query &= Q(authors__icontains=authors)
     if isbn:
-        query = query.filter(Book.isbn.ilike(f"%{isbn}%"))
+        query &= Q(isbn__icontains=isbn)
     if isbn13:
-        query = query.filter(Book.isbn13.ilike(f"%{isbn13}%"))
+        query &= Q(isbn13__icontains=isbn13)
     if language_code:
-        query = query.filter(Book.language_code.ilike(f"%{language_code}%"))
+        query &= Q(language_code__icontains=language_code)
     if publisher:
-        query = query.filter(Book.publisher.ilike(f"%{publisher}%"))
-
-    return query.offset(skip).limit(limit).all()
-
-
-def get_book_or_404(db: Session, book_id: int) -> Book:
-    book = db.query(Book).filter(Book.id == book_id).first()
-    if not book:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
-    return book
+        query &= Q(publisher__icontains=publisher)
+    return Book.objects.filter(query)[skip : skip + limit]
 
 
-def update_book(db: Session, book_id: int, payload: BookUpdate) -> Book:
-    book = get_book_or_404(db, book_id)
-    updates = payload.model_dump(exclude_unset=True)
+def get_book_or_404(book_id: int) -> Book:
+    try:
+        return Book.objects.get(id=book_id)
+    except Book.DoesNotExist as exc:
+        raise NotFound(detail="Book not found") from exc
 
-    if not updates:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No fields provided")
 
-    new_book_id = updates.get("bookID")
+def create_book(validated_data: dict) -> Book:
+    if validated_data.get("bookID") is None:
+        validated_data["bookID"] = next_book_id()
+
+    if Book.objects.filter(bookID=validated_data["bookID"]).exists():
+        raise ConflictError(detail="bookID already exists")
+
+    return Book.objects.create(**validated_data)
+
+
+def update_book(book_id: int, validated_data: dict) -> Book:
+    if not validated_data:
+        raise ValidationError(detail="No fields provided")
+
+    book = get_book_or_404(book_id)
+    new_book_id = validated_data.get("bookID")
     if new_book_id is not None and new_book_id != book.bookID:
-        existing = db.query(Book).filter(Book.bookID == new_book_id).first()
-        if existing:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="bookID already exists")
+        if Book.objects.filter(bookID=new_book_id).exclude(id=book.id).exists():
+            raise ConflictError(detail="bookID already exists")
 
-    for field, value in updates.items():
+    for field, value in validated_data.items():
         setattr(book, field, value)
 
-    db.commit()
-    db.refresh(book)
+    book.save()
     return book
 
 
-def delete_book(db: Session, book_id: int) -> None:
-    book = get_book_or_404(db, book_id)
-    db.delete(book)
-    db.commit()
+def delete_book(book_id: int) -> None:
+    book = get_book_or_404(book_id)
+    book.delete()
